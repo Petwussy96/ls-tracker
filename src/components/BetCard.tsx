@@ -41,7 +41,8 @@ export function BetCard({
   const canAdminOverride = bet.status !== "open" && isAdmin;
   const category = computeBetCategory(bet);
 
-  const statusColor =
+  // Status-driven design accents — pill color + top accent strip color
+  const statusPill =
     bet.status === "won"
       ? "bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:ring-emerald-900"
       : bet.status === "lost"
@@ -50,8 +51,20 @@ export function BetCard({
           ? "bg-ink-100 text-ink-600 ring-ink-200 dark:bg-ink-800 dark:text-ink-400 dark:ring-ink-700"
           : "bg-amber-100 text-amber-800 ring-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:ring-amber-900";
 
+  const accentStrip =
+    bet.status === "won"
+      ? "bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-400"
+      : bet.status === "lost"
+        ? "bg-gradient-to-r from-rose-400 via-rose-500 to-rose-400"
+        : bet.status === "void"
+          ? "bg-gradient-to-r from-ink-300 via-ink-400 to-ink-300 dark:from-ink-700 dark:via-ink-600 dark:to-ink-700"
+          : "bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400";
+
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-4 shadow-sm dark:border-ink-800 dark:bg-ink-900">
+    <div className="relative overflow-hidden rounded-2xl border border-ink-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md dark:border-ink-800 dark:bg-ink-900">
+      {/* Status accent strip on top */}
+      <div className={`absolute inset-x-0 top-0 h-1 ${accentStrip}`} aria-hidden />
+
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {user && (
@@ -59,7 +72,7 @@ export function BetCard({
               href={`/profile/${user.username}`}
               className="mb-1 inline-flex items-center gap-2 text-xs font-semibold text-ink-600 hover:text-ink-900 dark:text-ink-400 dark:hover:text-white"
             >
-              <Avatar user={user} size={20} />
+              <Avatar user={user} size={20} className="ring-halo" />
               {user.displayName}
             </Link>
           )}
@@ -74,7 +87,7 @@ export function BetCard({
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
           <span
-            className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ${statusColor}`}
+            className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ${statusPill}`}
           >
             {t(`status.${bet.status}` as TranslationKey)}
           </span>
@@ -129,7 +142,7 @@ export function BetCard({
                 : "Total odds"
               : t("openBets.odds")}
           </div>
-          <div className="text-xl font-black tracking-tight text-ink-900 dark:text-white">
+          <div className="text-2xl font-black tracking-tight text-ink-900 dark:text-white">
             {formatOdds(bet.combinedOdds)}
           </div>
         </div>

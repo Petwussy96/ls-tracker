@@ -3,13 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --background: #fafafa;
+  --background: #f8fafc;
   --foreground: #0f172a;
+
+  /* Brand accents used by the body-glow */
+  --glow-1: rgba(225, 29, 72, 0.06);   /* brand rose */
+  --glow-2: rgba(245, 158, 11, 0.06);  /* amber */
+  --glow-3: rgba(2, 132, 199, 0.05);   /* sky */
 }
 
 .dark {
   --background: #020617;
   --foreground: #f1f5f9;
+  --glow-1: rgba(225, 29, 72, 0.08);
+  --glow-2: rgba(245, 158, 11, 0.07);
+  --glow-3: rgba(2, 132, 199, 0.07);
 }
 
 html,
@@ -21,6 +29,14 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-feature-settings: "ss01", "cv11";
+
+  /* Three soft radial glows give the flat background a more "designed"
+     feel without being distracting. Fixed-position so they don't scroll. */
+  background-image:
+    radial-gradient(at 0% 0%, var(--glow-1) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, var(--glow-2) 0px, transparent 55%),
+    radial-gradient(at 50% 100%, var(--glow-3) 0px, transparent 60%);
+  background-attachment: fixed;
 }
 
 /* Subtle scrollbar */
@@ -28,11 +44,32 @@ body {
   .scrollbar-thin {
     scrollbar-width: thin;
   }
+
+  /* Lift-on-hover for clickable cards. Use sparingly. */
+  .hover-lift {
+    @apply transition-all duration-200 ease-out;
+  }
+  .hover-lift:hover {
+    @apply -translate-y-0.5 shadow-md;
+  }
+
+  /* Avatar ring — applied via className=ring-halo on the wrapper */
+  .ring-halo {
+    @apply ring-2 ring-white/80 dark:ring-ink-900/80 shadow-sm;
+  }
 }
 
 /* Form input — used by submit form */
 @layer components {
   .input {
     @apply w-full rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm text-ink-900 outline-none transition focus:border-ink-900 focus:ring-2 focus:ring-ink-900/10 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-100 dark:focus:border-ink-100 dark:focus:ring-ink-100/10;
+  }
+
+  /* "Card" — used by sections that want a subtle elevated look. */
+  .card {
+    @apply rounded-2xl border border-ink-200 bg-white shadow-sm transition-shadow dark:border-ink-800 dark:bg-ink-900;
+  }
+  .card:hover {
+    @apply shadow-md;
   }
 }

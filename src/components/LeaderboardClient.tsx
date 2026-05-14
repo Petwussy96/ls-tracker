@@ -66,11 +66,22 @@ export function LeaderboardClient({
 
   return (
     <div className="space-y-8">
-      {/* Hero — gradient looks similar in both themes */}
-      <section className="rounded-3xl bg-gradient-to-br from-ink-900 via-ink-800 to-ink-900 p-6 text-white shadow-lg sm:p-10 dark:from-ink-950 dark:via-ink-900 dark:to-ink-950">
-        <div className="max-w-2xl">
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-wider">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
+      {/* Hero — layered gradient + soft brand glows for a premium feel */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-ink-900 via-ink-800 to-ink-900 p-6 text-white shadow-xl sm:p-10 dark:from-ink-950 dark:via-ink-900 dark:to-ink-950">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-rose-500/20 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-amber-500/15 blur-3xl"
+        />
+        <div className="relative max-w-2xl">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs uppercase tracking-wider ring-1 ring-white/10 backdrop-blur">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+            </span>
             {locale === "nl" ? "Live tracker" : "Live tracker"}
           </div>
           <h1 className="text-3xl font-black tracking-tight sm:text-5xl">{t("leaderboard.title")}</h1>
@@ -78,13 +89,13 @@ export function LeaderboardClient({
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/submit"
-              className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-ink-900 hover:bg-ink-100"
+              className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-ink-900 shadow-md transition hover:-translate-y-0.5 hover:bg-ink-100 hover:shadow-lg"
             >
               {t("nav.submit")} →
             </Link>
             <Link
               href="/bets"
-              className="rounded-full border border-white/30 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
+              className="rounded-full border border-white/30 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
             >
               {t("nav.openBets")}
             </Link>
@@ -134,13 +145,24 @@ export function LeaderboardClient({
           label={t("leaderboard.winRate")}
           value={formatPercent(groupWinRate, locale)}
           tone="positive"
+          icon="🎯"
         />
         <StatCard
           label={locale === "nl" ? "Actieve spelers" : "Active players"}
           value={ranked.filter((s) => s.totalBets > 0).length}
+          icon="👥"
         />
-        <StatCard label={locale === "nl" ? "Totaal bets" : "Total bets"} value={groupTotal} />
-        <StatCard label={locale === "nl" ? "Open bets" : "Open bets"} value={groupOpen} tone="gold" />
+        <StatCard
+          label={locale === "nl" ? "Totaal bets" : "Total bets"}
+          value={groupTotal}
+          icon="🎲"
+        />
+        <StatCard
+          label={locale === "nl" ? "Open bets" : "Open bets"}
+          value={groupOpen}
+          tone="gold"
+          icon="⏳"
+        />
       </section>
 
       {/* Leaderboard table */}
@@ -186,10 +208,20 @@ export function LeaderboardClient({
                         : idx === 2
                           ? "🥉"
                           : `${idx + 1}`;
+                const rankChipClass =
+                  stats.settledBets === 0
+                    ? "bg-ink-100 text-ink-400 dark:bg-ink-800 dark:text-ink-500"
+                    : idx === 0
+                      ? "bg-gradient-to-br from-amber-200 to-amber-400 text-amber-900 shadow-sm dark:from-amber-700 dark:to-amber-500 dark:text-amber-50"
+                      : idx === 1
+                        ? "bg-gradient-to-br from-ink-200 to-ink-300 text-ink-800 shadow-sm dark:from-ink-600 dark:to-ink-500 dark:text-white"
+                        : idx === 2
+                          ? "bg-gradient-to-br from-orange-200 to-orange-400 text-orange-900 shadow-sm dark:from-orange-700 dark:to-orange-500 dark:text-orange-50"
+                          : "bg-ink-100 text-ink-600 dark:bg-ink-800 dark:text-ink-300";
                 return (
-                  <tr key={stats.user.id} className="hover:bg-ink-50/40 dark:hover:bg-ink-800/40">
+                  <tr key={stats.user.id} className="transition-colors hover:bg-ink-50/60 dark:hover:bg-ink-800/40">
                     <td className="px-3 py-3 font-semibold sm:px-4">
-                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-ink-100 text-xs dark:bg-ink-800">
+                      <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${rankChipClass}`}>
                         {rankIcon}
                       </span>
                     </td>
@@ -198,7 +230,7 @@ export function LeaderboardClient({
                         href={`/profile/${stats.user.username}`}
                         className="inline-flex items-center gap-2 group"
                       >
-                        <Avatar user={stats.user} size={28} />
+                        <Avatar user={stats.user} size={28} className="ring-halo" />
                         <span>
                           <span className="block font-semibold text-ink-900 group-hover:underline dark:text-white">
                             {stats.user.displayName}
