@@ -6,7 +6,7 @@ import { useI18n } from "@/lib/I18nContext";
 import type { TranslationKey } from "@/lib/i18n";
 import type { BetType } from "@/lib/types";
 import { submitBet } from "@/app/submit/actions";
-import { parseScreenshotAction } from "@/app/submit/parseAction";
+import { parseBetscreenshotClient } from "@/lib/parseScreenshotClient";
 import { formatOdds } from "@/lib/format";
 import { ScreenshotHelpModal } from "@/components/ScreenshotHelpModal";
 
@@ -137,10 +137,9 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
     const previewUrl = URL.createObjectURL(file);
     setParseStatus({ kind: "parsing", previewUrl, filename: file.name });
 
-    const base64 = await fileToBase64(file);
-
+    // OCR + parsing run in the browser — see parseScreenshotClient.ts for why.
     startTransition(async () => {
-      const result = await parseScreenshotAction({ base64, mediaType: file.type });
+      const result = await parseBetscreenshotClient(file);
 
       if (!result.ok) {
         const messageKey: TranslationKey = (
@@ -148,9 +147,6 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
             no_bet_found: "submit.uploadError.noBetFound",
             parse_failed: "submit.uploadError.parseFailed",
             ocr_failed: "submit.uploadError.ocrFailed",
-            too_large: "submit.uploadError.tooLarge",
-            unsupported_type: "submit.uploadError.unsupportedType",
-            not_authenticated: "submit.uploadError.parseFailed",
           } as const
         )[result.error];
         setParseStatus({ kind: "error", previewUrl, messageKey });
@@ -644,20 +640,6 @@ function ScreenshotDropzone({
 }
 
 // ---- Helpers ----
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(reader.error ?? new Error("read failed"));
-    reader.onload = () => {
-      const result = reader.result as string;
-      const base64 = result.split(",")[1];
-      if (!base64) reject(new Error("empty base64"));
-      else resolve(base64);
-    };
-    reader.readAsDataURL(file);
-  });
-}
 
 function formatOddsForInput(value: number): string {
   // Always at least 2 decimals; preserve more if the original had them (e.g. 1.909).
