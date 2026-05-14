@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useI18n } from "@/lib/I18nContext";
 import type { TranslationKey } from "@/lib/i18n";
 import type { Bet, User, UserRole } from "@/lib/types";
@@ -9,6 +10,10 @@ import { ResolveButtons } from "@/components/ResolveButtons";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { computeBetCategory } from "@/lib/betCategory";
 import { Avatar } from "@/components/Avatar";
+
+// Long acca's get a collapsible body so a 12-leg combi doesn't take half the page.
+const LONG_ACCA_THRESHOLD = 6;
+const COLLAPSED_PREVIEW = 3;
 
 export function BetCard({
   bet,
@@ -22,8 +27,13 @@ export function BetCard({
   currentUserRole?: UserRole;
 }) {
   const { t, locale } = useI18n();
+  const [expanded, setExpanded] = useState(false);
 
   const isAcca = bet.selections.length > 1;
+  const isLongAcca = bet.selections.length >= LONG_ACCA_THRESHOLD;
+  const visibleSelections =
+    isLongAcca && !expanded ? bet.selections.slice(0, COLLAPSED_PREVIEW) : bet.selections;
+  const hiddenCount = bet.selections.length - visibleSelections.length;
   const isOwner = currentUserId === bet.userId;
   const isAdmin = currentUserRole === "admin";
   const canResolveOpen = bet.status === "open" && (isOwner || isAdmin);
@@ -73,7 +83,7 @@ export function BetCard({
 
       {/* Selections */}
       <ul className={`mt-3 space-y-1.5 ${isAcca ? "border-l-2 border-ink-100 pl-3 dark:border-ink-800" : ""}`}>
-        {bet.selections.map((sel, i) => (
+        {visibleSelections.map((sel, i) => (
           <li key={i} className="text-sm">
             <div className="flex items-baseline justify-between gap-2">
               <span className="font-medium text-ink-800 dark:text-ink-200">{sel.selection}</span>
@@ -83,6 +93,24 @@ export function BetCard({
           </li>
         ))}
       </ul>
+
+      {/* Expand/collapse toggle for long acca's */}
+      {isLongAcca && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-2 inline-flex items-center gap-1 rounded-full bg-ink-50 px-3 py-1 text-xs font-semibold text-ink-600 hover:bg-ink-100 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
+          aria-expanded={expanded}
+        >
+          {expanded
+            ? locale === "nl"
+              ? "Klap in ▲"
+              : "Collapse ▲"
+            : locale === "nl"
+              ? `Toon nog ${hiddenCount} benen ▼`
+              : `Show ${hiddenCount} more legs ▼`}
+        </button>
+      )}
 
       {bet.notes && (
         <div className="mt-3 rounded-lg bg-ink-50 px-3 py-2 text-xs italic text-ink-600 dark:bg-ink-800 dark:text-ink-300">
