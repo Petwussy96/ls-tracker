@@ -163,11 +163,11 @@ function UserMenu({
             </Link>
             {user.role === "admin" && (
               <Link
-                href="/admin/invites"
+                href="/admin"
                 onClick={onClose}
                 className="block px-4 py-1.5 text-sm text-ink-700 hover:bg-ink-50 dark:text-ink-200 dark:hover:bg-ink-700"
               >
-                {locale === "nl" ? "Uitnodigingen" : "Invites"}
+                {locale === "nl" ? "Admin dashboard" : "Admin dashboard"}
               </Link>
             )}
             <a

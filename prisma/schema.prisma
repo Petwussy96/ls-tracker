@@ -31,6 +31,8 @@ model User {
   bets            Bet[]
   createdInvites  InviteCode[] @relation("InviteCreator")
   consumedInvites InviteCode[] @relation("InviteConsumer")
+  reportsFiled    BetReport[]  @relation("Reporter")
+  reportsReviewed BetReport[]  @relation("Reviewer")
 }
 
 // Auth.js standard tables. Names + fields must match what the Prisma adapter expects.
@@ -106,6 +108,7 @@ model Bet {
   notes        String?
 
   selections Selection[]
+  reports    BetReport[]
 
   @@index([userId])
   @@index([status])
@@ -123,4 +126,29 @@ model Selection {
   position    Int     @default(0)
 
   @@index([betId])
+}
+
+// ============ Bet reports ============
+//
+// Members can flag a bet whose resolution (won/lost/void) looks wrong.
+// At >= REPORT_THRESHOLD reports the bet shows up in /admin/reports for
+// review. Reports are unique per (bet, reporter), so each user can only
+// flag a given bet once.
+
+model BetReport {
+  id           String    @id @default(cuid())
+  betId        String
+  reporterId   String
+  reason       String? // optional free-text from the reporter
+  createdAt    DateTime  @default(now())
+  reviewedAt   DateTime?
+  reviewedById String?
+
+  bet        Bet   @relation(fields: [betId], references: [id], onDelete: Cascade)
+  reporter   User  @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reviewedBy User? @relation("Reviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@unique([betId, reporterId])
+  @@index([betId])
+  @@index([reviewedAt])
 }

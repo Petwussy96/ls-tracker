@@ -7,6 +7,7 @@ import type { TranslationKey } from "@/lib/i18n";
 import type { Bet, User, UserRole } from "@/lib/types";
 import { formatDate, formatOdds, timeUntil } from "@/lib/format";
 import { ResolveButtons } from "@/components/ResolveButtons";
+import { ReportButton } from "@/components/ReportButton";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { computeBetCategory } from "@/lib/betCategory";
 import { Avatar } from "@/components/Avatar";
@@ -149,6 +150,11 @@ export function BetCard({
       {canResolveOpen && <ResolveButtons betId={bet.id} betStatus={bet.status} />}
       {canAdminOverride && (
         <ResolveButtons betId={bet.id} betStatus={bet.status} showAdminOverride />
+      )}
+
+      {/* Report flag — only on resolved bets, by non-owners, when logged in */}
+      {!isOwner && !!currentUserId && bet.status !== "open" && (
+        <ReportButton betId={bet.id} />
       )}
     </div>
   );
