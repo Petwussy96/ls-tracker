@@ -136,10 +136,9 @@ function ResolveButton({
   );
 }
 
-function errorMessage(
-  error: ResolveBetResult extends { error: infer E } ? E : never,
-  locale: "nl" | "en",
-): string {
+type ResolveError = Extract<ResolveBetResult, { ok: false }>["error"];
+
+function errorMessage(error: ResolveError, locale: "nl" | "en"): string {
   const map: Record<string, { nl: string; en: string }> = {
     not_authorized: {
       nl: "Alleen de eigenaar (of een beheerder) kan deze bet afhandelen.",

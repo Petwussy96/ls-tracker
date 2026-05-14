@@ -100,7 +100,7 @@ export async function signupWithInvite(input: SignupInput): Promise<SignupResult
       "username_taken",
     ] as const;
     if ((known as readonly string[]).includes(msg)) {
-      return { ok: false, error: msg as SignupResult extends { error: infer E } ? E : never };
+      return { ok: false, error: msg as Extract<SignupResult, { ok: false }>["error"] };
     }
     console.error("signup tx failed", err);
     return { ok: false, error: "send_failed" };
