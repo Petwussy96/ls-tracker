@@ -1,13 +1,38 @@
 "use server";
 
+import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
 import { signIn } from "@/auth";
+import { rateLimit, sweepExpiredBuckets } from "@/lib/rateLimit";
+
+// We don't have request bodies in server actions, but we can read headers.
+// Vercel sets x-forwarded-for; fall back to a UA hash for local/dev.
+function clientKey(): string {
+  const h = headers();
+  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
+  return ip;
+}
+
+// Code validation is cheap, but brute-forcing invite codes is the main
+// attack we care about — cap at 20 attempts per IP per 10 minutes.
+const VALIDATE_LIMIT = 20;
+const VALIDATE_WINDOW_MS = 10 * 60 * 1000;
+
+// Actual signups are rarer — cap at 5 per IP per hour. Stops bots from
+// burning through a stack of leaked invite codes.
+const SIGNUP_LIMIT = 5;
+const SIGNUP_WINDOW_MS = 60 * 60 * 1000;
 
 export type ValidateCodeResult =
   | { ok: true }
-  | { ok: false; error: "unknown" | "consumed" | "expired" };
+  | { ok: false; error: "unknown" | "consumed" | "expired" | "rate_limited" };
 
 export async function validateInviteCode(code: string): Promise<ValidateCodeResult> {
+  sweepExpiredBuckets();
+
+  const rl = rateLimit(`invite-validate:${clientKey()}`, VALIDATE_LIMIT, VALIDATE_WINDOW_MS);
+  if (!rl.allowed) return { ok: false, error: "rate_limited" };
+
   const normalized = code.trim().toUpperCase();
   if (!normalized) return { ok: false, error: "unknown" };
 
@@ -40,12 +65,18 @@ export type SignupResult =
         | "invalid_username"
         | "username_taken"
         | "invalid_displayname"
-        | "send_failed";
+        | "send_failed"
+        | "rate_limited";
     };
 
 const USERNAME_RE = /^[A-Za-z0-9_]{3,20}$/;
 
 export async function signupWithInvite(input: SignupInput): Promise<SignupResult> {
+  sweepExpiredBuckets();
+
+  const rl = rateLimit(`signup:${clientKey()}`, SIGNUP_LIMIT, SIGNUP_WINDOW_MS);
+  if (!rl.allowed) return { ok: false, error: "rate_limited" };
+
   const code = input.code.trim().toUpperCase();
   const email = input.email.trim().toLowerCase();
   const username = input.username.trim();

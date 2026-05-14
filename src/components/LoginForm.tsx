@@ -31,9 +31,13 @@ export function LoginForm({ next }: { next?: string }) {
             ? locale === "nl"
               ? "Geen account met dit e-mailadres. Vraag een uitnodigingscode aan een beheerder."
               : "No account with that email. Ask an admin for an invite code."
-            : locale === "nl"
-              ? "Iets ging mis bij het verzenden. Probeer het later opnieuw."
-              : "Failed to send. Try again later.",
+            : result.error === "rate_limited"
+              ? locale === "nl"
+                ? "Te veel pogingen. Wacht een kwartier en probeer het opnieuw."
+                : "Too many attempts. Wait 15 minutes and try again."
+              : locale === "nl"
+                ? "Iets ging mis bij het verzenden. Probeer het later opnieuw."
+                : "Failed to send. Try again later.",
       );
     });
   }

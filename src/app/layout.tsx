@@ -5,6 +5,7 @@ import { I18nProvider } from "@/lib/I18nContext";
 import { ThemeProvider } from "@/lib/ThemeContext";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { CookieBanner } from "@/components/CookieBanner";
 import { auth } from "@/auth";
 
 export const metadata: Metadata = {
@@ -56,6 +57,7 @@ export default async function RootLayout({
               <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">{children}</div>
             </main>
             <Footer />
+            <CookieBanner />
           </I18nProvider>
         </ThemeProvider>
         <Analytics />

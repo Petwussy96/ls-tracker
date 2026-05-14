@@ -226,18 +226,23 @@ export function JoinForm({ prefillCode }: { prefillCode: string }) {
   );
 }
 
-function codeErrorMessage(error: "unknown" | "consumed" | "expired", locale: "nl" | "en"): string {
+function codeErrorMessage(
+  error: "unknown" | "consumed" | "expired" | "rate_limited",
+  locale: "nl" | "en",
+): string {
   if (locale === "nl") {
     return {
       unknown: "Code niet gevonden. Check of je hem goed hebt overgenomen.",
       consumed: "Deze code is al gebruikt.",
       expired: "Deze code is verlopen. Vraag een nieuwe aan.",
+      rate_limited: "Te veel pogingen. Wacht 10 minuten en probeer het opnieuw.",
     }[error];
   }
   return {
     unknown: "Code not found. Double-check it.",
     consumed: "This code has already been used.",
     expired: "This code is expired. Ask for a new one.",
+    rate_limited: "Too many attempts. Wait 10 minutes and try again.",
   }[error];
 }
 
@@ -254,6 +259,7 @@ function signupErrorMessage(error: string, locale: "nl" | "en"): string {
         username_taken: "Deze gebruikersnaam is al bezet.",
         invalid_displayname: "Naam moet tussen 2 en 40 tekens zijn.",
         send_failed: "Iets ging mis. Probeer het opnieuw.",
+        rate_limited: "Te veel pogingen vanaf jouw IP. Wacht een uur.",
       }[error] ?? "Er ging iets mis."
     );
   }
@@ -268,6 +274,7 @@ function signupErrorMessage(error: string, locale: "nl" | "en"): string {
       username_taken: "This username is taken.",
       invalid_displayname: "Display name must be 2-40 chars.",
       send_failed: "Something went wrong. Try again.",
+      rate_limited: "Too many attempts from your IP. Wait an hour.",
     }[error] ?? "Something went wrong."
   );
 }
