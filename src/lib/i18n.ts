@@ -142,6 +142,14 @@ export const translations = {
 
     // Footer
     "footer.disclaimer": "Speel bewust. 18+. LS Tracker is een community-tool, geen gokaanbieder.",
+    "footer.feedback": "Feedback geven",
+
+    // Welcome banner (Leaderboard, voor users met 0 bets)
+    "welcome.title": "Welkom bij LS Tracker! 🎯",
+    "welcome.body":
+      "Dit is de plek waar de Lucky Sucker community elkaars bets bijhoudt. Upload een screenshot van je wedstrijdformulier en hij komt automatisch op de ranglijst.",
+    "welcome.cta": "Plaats je eerste bet",
+    "welcome.dismiss": "Sluit",
   },
   en: {
     "brand.name": "LS Tracker",
@@ -265,5 +273,12 @@ export const translations = {
     "common.kickoff": "Kickoff",
 
     "footer.disclaimer": "Bet responsibly. 18+. LS Tracker is a community tool, not a bookmaker.",
+    "footer.feedback": "Send feedback",
+
+    "welcome.title": "Welcome to LS Tracker! 🎯",
+    "welcome.body":
+      "This is where the Lucky Sucker community tracks each other's bets. Upload a screenshot of your slip and it lands on the leaderboard automatically.",
+    "welcome.cta": "Place your first bet",
+    "welcome.dismiss": "Dismiss",
   },
 } as const;

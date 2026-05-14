@@ -44,3 +44,6 @@ prisma/migrations/
 /public/avatars/*.jpg
 /public/avatars/*.jpeg
 /public/avatars/*.webp
+
+# Scratch files left over from a Cowork file-sync issue (safe to delete via Explorer)
+*.tmp

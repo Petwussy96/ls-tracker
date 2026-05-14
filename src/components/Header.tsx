@@ -170,6 +170,13 @@ function UserMenu({
                 {locale === "nl" ? "Uitnodigingen" : "Invites"}
               </Link>
             )}
+            <a
+              href="mailto:i.dimitrijevic96@gmail.com?subject=LS%20Tracker%20feedback"
+              onClick={onClose}
+              className="block px-4 py-1.5 text-sm text-ink-700 hover:bg-ink-50 dark:text-ink-200 dark:hover:bg-ink-700"
+            >
+              💬 {t("footer.feedback")}
+            </a>
             <div className="my-1 h-px bg-ink-100 dark:bg-ink-700" />
             <form action={signOutAction}>
               <button

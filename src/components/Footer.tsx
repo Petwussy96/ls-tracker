@@ -2,12 +2,21 @@
 
 import { useI18n } from "@/lib/I18nContext";
 
+const FEEDBACK_MAILTO =
+  "mailto:i.dimitrijevic96@gmail.com?subject=LS%20Tracker%20feedback";
+
 export function Footer() {
   const { t } = useI18n();
   return (
     <footer className="mt-16 border-t border-ink-200 bg-white/60 dark:border-ink-800 dark:bg-ink-900/60">
-      <div className="mx-auto max-w-6xl px-4 py-6 text-center text-xs text-ink-400 dark:text-ink-500 sm:px-6">
-        {t("footer.disclaimer")}
+      <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-4 py-6 text-center text-xs text-ink-400 sm:flex-row sm:justify-between sm:px-6 dark:text-ink-500">
+        <p className="order-2 sm:order-1">{t("footer.disclaimer")}</p>
+        <a
+          href={FEEDBACK_MAILTO}
+          className="order-1 inline-flex items-center gap-1 rounded-full border border-ink-200 px-3 py-1 font-semibold text-ink-600 hover:bg-ink-100 hover:text-ink-900 sm:order-2 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-white"
+        >
+          💬 {t("footer.feedback")}
+        </a>
       </div>
     </footer>
   );

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { I18nProvider } from "@/lib/I18nContext";
 import { ThemeProvider } from "@/lib/ThemeContext";
@@ -57,6 +58,7 @@ export default async function RootLayout({
             <Footer />
           </I18nProvider>
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );

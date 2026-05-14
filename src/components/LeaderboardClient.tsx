@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/lib/I18nContext";
 import { rankUsers } from "@/lib/stats";
 import { formatOdds, formatPercent } from "@/lib/format";
@@ -15,12 +15,48 @@ import {
   type CategorySelection,
 } from "@/components/CategoryFilterChips";
 
-export function LeaderboardClient({ users, bets }: { users: User[]; bets: Bet[] }) {
+const WELCOME_DISMISS_KEY = "lucky-sucker-welcome-dismissed";
+
+export function LeaderboardClient({
+  users,
+  bets,
+  currentUserId,
+}: {
+  users: User[];
+  bets: Bet[];
+  currentUserId?: string | null;
+}) {
   const { t, locale } = useI18n();
   const [category, setCategory] = useState<CategorySelection>("all");
+  const [welcomeDismissed, setWelcomeDismissed] = useState(true); // start hidden to avoid flash
+
+  // Restore dismissed state after hydration.
+  useEffect(() => {
+    try {
+      setWelcomeDismissed(localStorage.getItem(WELCOME_DISMISS_KEY) === "1");
+    } catch {
+      // localStorage can fail in private mode — just leave it dismissed.
+    }
+  }, []);
 
   const filteredBets = useMemo(() => applyCategoryFilter(bets, category), [bets, category]);
   const ranked = useMemo(() => rankUsers(users, filteredBets), [users, filteredBets]);
+
+  // Show welcome banner only for logged-in users who haven't placed any bet yet
+  // and haven't dismissed it.
+  const showWelcome =
+    !welcomeDismissed &&
+    !!currentUserId &&
+    bets.every((b) => b.userId !== currentUserId);
+
+  function dismissWelcome() {
+    setWelcomeDismissed(true);
+    try {
+      localStorage.setItem(WELCOME_DISMISS_KEY, "1");
+    } catch {
+      // ignore
+    }
+  }
 
   const groupWins = ranked.reduce((s, u) => s + u.wins, 0);
   const groupSettled = ranked.reduce((s, u) => s + u.settledBets, 0);
@@ -55,6 +91,34 @@ export function LeaderboardClient({ users, bets }: { users: User[]; bets: Bet[] 
           </div>
         </div>
       </section>
+
+      {/* Welcome banner — shown once to new users with no bets yet */}
+      {showWelcome && (
+        <section className="relative overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-5 shadow-sm dark:border-amber-900/40 dark:from-amber-950/40 dark:to-orange-950/40">
+          <button
+            type="button"
+            onClick={dismissWelcome}
+            aria-label={t("welcome.dismiss")}
+            className="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full text-ink-400 hover:bg-amber-100 hover:text-ink-700 dark:text-ink-500 dark:hover:bg-amber-900/40 dark:hover:text-ink-200"
+          >
+            ✕
+          </button>
+          <h2 className="text-lg font-black tracking-tight text-ink-900 dark:text-white sm:text-xl">
+            {t("welcome.title")}
+          </h2>
+          <p className="mt-1 max-w-2xl text-sm text-ink-700 dark:text-ink-200">
+            {t("welcome.body")}
+          </p>
+          <div className="mt-4">
+            <Link
+              href="/submit"
+              className="inline-flex items-center gap-2 rounded-full bg-ink-900 px-4 py-2 text-sm font-semibold text-white hover:bg-ink-800 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
+            >
+              {t("welcome.cta")} →
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* Category filter — re-ranks the leaderboard within that category */}
       <CategoryFilterChips
