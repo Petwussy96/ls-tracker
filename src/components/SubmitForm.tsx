@@ -65,6 +65,8 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [duplicateOf, setDuplicateOf] = useState<string | null>(null);
+  const [totalOnlyMode, setTotalOnlyMode] = useState(false);
+  const [manualTotal, setManualTotal] = useState("");
   const [parseStatus, setParseStatus] = useState<ParseStatus>({ kind: "idle" });
   const [dragOver, setDragOver] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
