@@ -21,6 +21,7 @@ export function InvitesAdminClient({ invites }: { invites: Invite[] }) {
   const [expiresInDays, setExpiresInDays] = useState<string>("");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [copiedLabel, setCopiedLabel] = useState<string | null>(null);
   const [lastCreated, setLastCreated] = useState<string | null>(null);
 
   const pendingInvites = invites.filter((i) => !i.consumedAt);
@@ -51,12 +52,28 @@ export function InvitesAdminClient({ invites }: { invites: Invite[] }) {
     });
   }
 
-  async function copyCode(code: string) {
+  function inviteLink(code: string): string {
+    if (typeof window === "undefined") return `/join?code=${code}`;
+    return `${window.location.origin}/join?code=${code}`;
+  }
+
+  async function copyText(text: string, label?: string) {
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(text);
+      setCopiedLabel(label ?? null);
+      setTimeout(() => setCopiedLabel(null), 1800);
     } catch {
       // ignore
     }
+  }
+
+  function whatsappHref(code: string): string {
+    const link = inviteLink(code);
+    const msg =
+      locale === "nl"
+        ? `Hier je uitnodiging voor LS Tracker (Lucky Sucker community tracker):\n${link}`
+        : `Here's your invite for LS Tracker:\n${link}`;
+    return `https://wa.me/?text=${encodeURIComponent(msg)}`;
   }
 
   return (
@@ -123,26 +140,43 @@ export function InvitesAdminClient({ invites }: { invites: Invite[] }) {
           <div className="mt-3 rounded-xl bg-rose-50 px-4 py-2 text-sm text-rose-700">{error}</div>
         )}
         {lastCreated && (
-          <div className="mt-3 flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3">
-            <div>
-              <div className="text-[10px] uppercase tracking-wider text-emerald-700">
-                {locale === "nl" ? "Nieuwe code" : "New code"}
-              </div>
-              <div className="font-mono text-lg font-black text-emerald-900">{lastCreated}</div>
+          <div className="mt-3 rounded-xl bg-emerald-50 px-4 py-3">
+            <div className="text-[10px] uppercase tracking-wider text-emerald-700">
+              {locale === "nl" ? "Nieuwe code" : "New code"}
             </div>
-            <button
-              onClick={() => copyCode(lastCreated)}
-              className="rounded-full bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
-            >
-              {locale === "nl" ? "Kopieer" : "Copy"}
-            </button>
+            <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="font-mono text-lg font-black text-emerald-900">{lastCreated}</span>
+              <code className="break-all text-xs text-emerald-800">{inviteLink(lastCreated)}</code>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                onClick={() => copyText(inviteLink(lastCreated), `link:${lastCreated}`)}
+                className="rounded-full bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
+              >
+                {copiedLabel === `link:${lastCreated}` ? "✓" : "📋"}{" "}
+                {locale === "nl" ? "Kopieer link" : "Copy link"}
+              </button>
+              <button
+                onClick={() => copyText(lastCreated, `code:${lastCreated}`)}
+                className="rounded-full border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+              >
+                {copiedLabel === `code:${lastCreated}` ? "✓" : ""} {locale === "nl" ? "Alleen code" : "Code only"}
+              </button>
+              <a
+                href={whatsappHref(lastCreated)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full border border-emerald-300 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+              >
+                💬 WhatsApp
+              </a>
+            </div>
           </div>
         )}
         <p className="mt-3 text-xs text-ink-400">
           {locale === "nl"
-            ? "Tip: deel de code als link. Bijvoorbeeld: " +
-              "ls-tracker.app/join?code=LS-XYZ-1234"
-            : "Tip: share as link. e.g. ls-tracker.app/join?code=LS-XYZ-1234"}
+            ? "Tip: kopieer de hele link en plak in Messenger — tester klikt en de code wordt automatisch ingevuld."
+            : "Tip: copy the full link and paste in Messenger — the code auto-fills for the tester."}
         </p>
       </section>
 
@@ -180,18 +214,29 @@ export function InvitesAdminClient({ invites }: { invites: Invite[] }) {
                       {inv.expiresAt ? formatDate(inv.expiresAt, locale) : "–"}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => copyCode(inv.code)}
-                        className="rounded-full bg-ink-100 px-3 py-1 text-xs font-semibold text-ink-700 hover:bg-ink-200"
-                      >
-                        {locale === "nl" ? "Kopieer" : "Copy"}
-                      </button>
-                      <button
-                        onClick={() => handleRevoke(inv.id)}
-                        className="ml-2 rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200"
-                      >
-                        {locale === "nl" ? "Intrekken" : "Revoke"}
-                      </button>
+                      <div className="inline-flex flex-wrap gap-1">
+                        <button
+                          onClick={() => copyText(inviteLink(inv.code), `link:${inv.code}`)}
+                          className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 hover:bg-emerald-200"
+                          title={inviteLink(inv.code)}
+                        >
+                          {copiedLabel === `link:${inv.code}` ? "✓" : "📋"} {locale === "nl" ? "Kopieer link" : "Copy link"}
+                        </button>
+                        <a
+                          href={whatsappHref(inv.code)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-full bg-ink-100 px-3 py-1 text-xs font-semibold text-ink-700 hover:bg-ink-200"
+                        >
+                          💬
+                        </a>
+                        <button
+                          onClick={() => handleRevoke(inv.id)}
+                          className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200"
+                        >
+                          {locale === "nl" ? "Intrekken" : "Revoke"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
