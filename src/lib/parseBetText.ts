@@ -101,6 +101,9 @@ const SUMMARY_PATTERNS = [
   /selecties\s*opnieuw/i,
   /cash\s*out/i,
   /wissel\+/i,
+  /\bsaldo\b/i,                  // bet365 balance display
+  /\bopties\s+tonen\b/i,        // bet365 "show options" link
+  /^selecties\s*$/i,             // standalone "Selecties" header
   // Toto Spelformulier (bet builder) layout
   /^spelformulier/i,
   /^selecties\s*\(/i, // "SELECTIES (5)"
@@ -238,6 +241,11 @@ function stripLeadingNoise(text: string): string {
   s = s.replace(/^[^A-Za-z\s]{1,3}\s+(?=[A-Z])/, "");
   // Single lowercase letter prefix ("o Girona", "t Real").
   s = s.replace(/^[a-z](?=\s+[A-Z])\s+/, "");
+  // Single UPPERCASE letter bullet ("X Lyngby" — bet365 delete icon,
+  // "O Neuchatel Xamax" — bet365 wrap bullet). Real team prefixes are
+  // 2+ letters with no space ("FC Bayern"), so a single capital + space
+  // + capital can be safely stripped as an OCR-hallucinated icon.
+  s = s.replace(/^[A-Z](?=\s[A-Z])\s+/, "");
   return s.trim();
 }
 
@@ -403,10 +411,28 @@ function gatherDescription(allLines: Line[], from: number, to: number | undefine
     if (ln.hasMatch || ln.isSummary) continue;
     if (looksLikeTeamName(ln.raw)) continue;
     if (ln.raw.length < 2) continue;
-    rawParts.push(ln.raw);
+    const cleaned = cleanDescriptionPart(ln.raw);
+    if (cleaned.length >= 2) rawParts.push(cleaned);
   }
   if (rawParts.length === 0) return undefined;
   return dedupeDescriptionParts(rawParts).join(" · ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Strip OCR garbage from bet-type description lines:
+ *   "Eindresultaat [Vu] mm"   → "Eindresultaat"
+ *   "Eindresultaat —_—"        → "Eindresultaat"
+ *   "Eindresultaat [VU] +"     → "Eindresultaat"
+ * "VU" is bet365's "Vroege Uitbetaling" badge — not meaningful info.
+ */
+function cleanDescriptionPart(text: string): string {
+  return text
+    .replace(/\[\s*[Vv][Uu]\s*\]/g, "")              // [VU] / [Vu] badges
+    .replace(/\s+m{1,3}(?=\s|$)/gi, "")               // stray "mm" OCR noise
+    .replace(/[\s\-–—_+|]+$/g, "")                    // trailing punctuation
+    .replace(/^[\s\-–—_+|]+/g, "")                    // leading punctuation
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**
@@ -587,7 +613,15 @@ export function parseBetText(rawText: string): ParsedBetText {
           next.raw.length > 0 &&
           next.raw.length < 40
         ) {
-          selectionText = `${selectionText} ${next.raw.trim()}`.replace(/\s+/g, " ").trim();
+          // Trim trailing OCR junk from the wrap continuation —
+          // bet365's pill borders sometimes get read as dashes / "mm" / etc.
+          const wrapCont = next.raw
+            .trim()
+            .replace(/\s+[-–—_]+\s*$/, "")        // trailing dash
+            .replace(/\s+m{1,3}\s*$/i, "")        // trailing "mm" OCR noise
+            .replace(/[-–—_]+$/, "")               // bare trailing dash
+            .trim();
+          selectionText = `${selectionText} ${wrapCont}`.replace(/\s+/g, " ").trim();
           // Mark line consumed so findNearbyMatch skips it.
           usedMatchIdx.add(i + 1);
         }
