@@ -61,12 +61,13 @@ const SELECTION_HINTS = [
   /draw\s*no\s*bet/i, // Unibet
   /dubbele\s*kans/i, // Unibet "Dubbele Kans" (double chance)
   /geeft\s*een\s*assist/i, // Unibet "Scoort of Geeft Een Assist"
+  /reguliere\s*speeltijd/i, // Unibet 1X2 winner — "Reguliere Speeltijd: Salford City FC"
 ];
 
 // Lines that are summary / metadata / headers, NEVER selections.
 const SUMMARY_PATTERNS = [
   /noteringen?/i,
-  /\btotaal\b/i,
+  /\btotaal(?:\s*[:=€£$]|\s+(?:odds|quotering|inzet|inleg|uitbetaling|winst|profit))/i, // "Totaal: 5", "Totaal Quotering" — but NOT "Totaal Aantal Doelpunten"
   /total\s*odds/i,
   /combined\s*odds/i,
   /\binzet(?:\s*[:=€£$]|\s+\d)/i, // "Inzet: €5,00", "Inzet 5,00" — NOT trailing placeholder
