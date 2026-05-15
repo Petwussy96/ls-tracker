@@ -69,8 +69,8 @@ const SUMMARY_PATTERNS = [
   /\btotaal\b/i,
   /total\s*odds/i,
   /combined\s*odds/i,
-  /\binzet\b/i,
-  /\bstake\b/i,
+  /\binzet(?:\s*[:=€£$]|\s+\d)/i, // "Inzet: €5,00", "Inzet 5,00" — NOT trailing placeholder
+  /\bstake(?:\s*[:=€£$]|\s+\d)/i,
   /\buitbetaling\b/i,
   /\bpayout\b/i,
   /\bpotenti[eë]le?/i,
