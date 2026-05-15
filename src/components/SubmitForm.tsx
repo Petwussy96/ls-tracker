@@ -781,10 +781,12 @@ function guessBetType(selectionText: string): BetType {
 
 function Field({
   label,
+  hint,
   children,
   required,
 }: {
   label: string;
+  hint?: string;
   children: React.ReactNode;
   required?: boolean;
 }) {
@@ -795,6 +797,9 @@ function Field({
         {required && <span className="ml-0.5 text-rose-500">*</span>}
       </span>
       {children}
+      {hint && (
+        <span className="mt-1 block text-[11px] text-ink-400 dark:text-ink-500">{hint}</span>
+      )}
     </label>
   );
 }
