@@ -593,6 +593,44 @@ export function parseBetText(rawText: string): ParsedBetText {
         }
       }
 
+      // Wrapped match across two OCR lines (Toto digital with long fixture names):
+      //   "Stade Lausanne Ouchy -   1.39"     ← team A + dash + odds
+      //   "O Neuchatel Xamax"                  ← team B (with optional bullet)
+      //   "U Ja"                               ← real selection
+      //   "Beide teams scoren"                 ← bet type
+      // The trailing dash before the odds is the signal: it indicates the
+      // match name didn't fit on one line.
+      let wrappedMatch: { idx: number; text: string } | undefined;
+      const preStripBeforeOdds = line.raw.substring(0, oddsHit.pos);
+      if (
+        !line.hasMatch &&
+        /[-–—]\s*$/.test(preStripBeforeOdds) &&
+        i + 1 < allLines.length
+      ) {
+        const next = allLines[i + 1];
+        if (
+          next &&
+          !next.isSummary &&
+          next.odds.length === 0 &&
+          !next.hasMatch &&
+          !next.hasSelection &&
+          next.raw.length > 0 &&
+          next.raw.length < 60
+        ) {
+          // Strip a stray single-letter bullet (OCR hallucinated icon) at
+          // the start: "O Neuchatel Xamax" → "Neuchatel Xamax".
+          // Only single letter + single space + another capital letter — that
+          // pattern never appears in real team names ("FC", "AC", "AL" all
+          // have two letters before the space).
+          const rawNext = next.raw.replace(/^[A-Za-z](?=\s[A-Z])\s+/, "");
+          const teamB = cleanTeamCandidate(rawNext).trim();
+          if (teamB.length >= 2 && /^\p{L}/u.test(teamB)) {
+            wrappedMatch = { idx: i + 1, text: `${selectionText} - ${teamB}` };
+            usedMatchIdx.add(i + 1);
+          }
+        }
+      }
+
       // Special-case: Toto Spelformulier layout puts the match and the odds
       // on the SAME line, with the selection on lines below. e.g.:
       //   "Chelsea - Manchester City FC 1.66"   ← odds line + hasMatch
@@ -601,7 +639,22 @@ export function parseBetText(rawText: string): ParsedBetText {
       // In that case the "selectionText" we just extracted IS the match —
       // look below for the real selection content.
       let matched: { idx: number; lastIdx: number; text: string } | undefined;
-      if (line.hasMatch) {
+      if (wrappedMatch) {
+        matched = { idx: i, lastIdx: wrappedMatch.idx, text: wrappedMatch.text };
+        // Look BELOW the wrap continuation for the real selection content
+        // (mirrors Toto Spelformulier logic but starts after the wrap line).
+        const realSelParts: string[] = [];
+        for (let k = wrappedMatch.idx + 1; k < allLines.length && k <= wrappedMatch.idx + 4; k++) {
+          const next = allLines[k];
+          if (next.isSummary) continue;
+          if (next.odds.length > 0 || next.hasMatch) break;
+          if (next.raw.length < 2) continue;
+          realSelParts.push(next.raw);
+        }
+        if (realSelParts.length > 0) {
+          selectionText = realSelParts.join(" — ").trim();
+        }
+      } else if (line.hasMatch) {
         const inlineMatchText = extractMatchFromLine(line.raw);
         if (inlineMatchText) {
           matched = { idx: i, lastIdx: i, text: inlineMatchText };
