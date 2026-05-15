@@ -37,6 +37,7 @@ function rowToBet(b: {
   placedAt: Date;
   resolvedAt: Date | null;
   notes: string | null;
+  category?: string | null;
   selections: Array<{
     match: string;
     competition: string | null;
@@ -65,6 +66,7 @@ function rowToBet(b: {
     placedAt: b.placedAt.toISOString(),
     resolvedAt: b.resolvedAt?.toISOString(),
     notes: b.notes ?? undefined,
+    category: b.category ?? undefined,
   };
 }
 

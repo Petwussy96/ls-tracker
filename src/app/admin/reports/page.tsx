@@ -64,6 +64,7 @@ export default async function ReportsAdminPage() {
         placedAt: b.placedAt.toISOString(),
         resolvedAt: b.resolvedAt?.toISOString() ?? undefined,
         notes: b.notes ?? undefined,
+        category: b.category ?? undefined,
         selections: b.selections.map((s) => ({
           match: s.match,
           competition: s.competition ?? undefined,

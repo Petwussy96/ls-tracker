@@ -69,7 +69,15 @@ export function inferLegCategory(selectionText: string): LegCategory {
  * - All legs same category → that category
  * - Mixed → "mix"
  */
-export function computeBetCategory(bet: Pick<Bet, "selections">): BetCategory {
+export function computeBetCategory(bet: Pick<Bet, "selections" | "category">): BetCategory {
+  // Manual override: stored category wins over auto-detect. We validate it's
+  // one of the known categories so a stray DB value can't crash the UI.
+  if (bet.category) {
+    const all: BetCategory[] = [...CATEGORY_FILTER_ORDER, "other"];
+    if ((all as string[]).includes(bet.category)) {
+      return bet.category as BetCategory;
+    }
+  }
   if (bet.selections.length === 0) return "other";
   const cats = new Set<LegCategory>();
   for (const sel of bet.selections) {
@@ -92,11 +100,10 @@ export const CATEGORY_FILTER_ORDER: BetCategory[] = [
   "firstHalfGoals",
   "secondHalfGoals",
   "mix",
-  "scorer",
-  "handicap",
-  "halftime",
-  "correctScore",
   "doubleChance",
+  "handicap",
+  "correctScore",
+  "scorer",
+  "halftime",
   "drawNoBet",
-  "other",
 ];

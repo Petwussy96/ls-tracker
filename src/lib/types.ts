@@ -47,4 +47,6 @@ export interface Bet {
   placedAt: string; // ISO datetime
   resolvedAt?: string; // ISO datetime
   notes?: string;
+  /** Manual category override (null/undefined = auto-classify from selections) */
+  category?: string;
 }

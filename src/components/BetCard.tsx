@@ -91,7 +91,11 @@ export function BetCard({
           >
             {t(`status.${bet.status}` as TranslationKey)}
           </span>
-          <CategoryBadge category={category} />
+          <CategoryBadge
+            category={category}
+            betId={bet.id}
+            editable={!!currentUserId && (isOwner || canModerate)}
+          />
         </div>
       </div>
 

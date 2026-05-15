@@ -109,6 +109,7 @@ model Bet {
   placedAt     DateTime  @default(now())
   resolvedAt   DateTime?
   notes        String?
+  category     String? // manual override of computeBetCategory(); null = auto
 
   selections Selection[]
   reports    BetReport[]
