@@ -162,6 +162,13 @@ function UserMenu({
             >
               {t("nav.profile")}
             </Link>
+            <Link
+              href="/settings"
+              onClick={onClose}
+              className="block px-4 py-1.5 text-sm text-ink-700 hover:bg-ink-50 dark:text-ink-200 dark:hover:bg-ink-700"
+            >
+              ⚙️ {locale === "nl" ? "Instellingen" : "Settings"}
+            </Link>
             {(user.role === "admin" || user.role === "moderator") && (
               <Link
                 href="/admin"
