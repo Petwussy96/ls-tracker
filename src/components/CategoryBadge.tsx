@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/I18nContext";
 import type { BetCategory } from "@/lib/betCategory";
@@ -37,9 +38,17 @@ export function CategoryBadge({
   editable?: boolean;
 }) {
   const { t, locale } = useI18n();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [current, setCurrent] = useState<BetCategory>(category);
   const [pending, startTransition] = useTransition();
+
+  // Keep local state in sync if the parent re-renders with a new category
+  // (e.g. after router.refresh() following an "auto-detect" reset, the server
+  // recomputes and sends down the new category).
+  if (category !== current && !pending && !open) {
+    setCurrent(category);
+  }
 
   if (!editable || !betId) {
     return <PlainBadge category={current} t={t} />;
@@ -51,7 +60,14 @@ export function CategoryBadge({
     if (next !== null) setCurrent(next);
     startTransition(async () => {
       const r = await setBetCategory({ betId: betId!, category: next });
-      if (!r.ok) setCurrent(prev); // rollback
+      if (!r.ok) {
+        setCurrent(prev); // rollback on error
+        return;
+      }
+      // For "auto-detect" (null) we don't know the new computed category
+      // client-side — ask the server to re-render so the recomputed value
+      // flows back down.
+      if (next === null) router.refresh();
     });
   }
 

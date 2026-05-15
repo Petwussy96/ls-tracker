@@ -57,10 +57,26 @@ const PATTERNS: { cat: LegCategory; test: (text: string) => boolean }[] = [
 ];
 
 export function inferLegCategory(selectionText: string): LegCategory {
+  // Backwards-compatible: returns the first / most-specific match. For new
+  // code prefer inferLegCategoriesAll() which returns all matches so combo
+  // legs (BTTS+Resultaat, etc.) can be detected.
   for (const { cat, test } of PATTERNS) {
     if (test(selectionText)) return cat;
   }
   return "other";
+}
+
+/** Return EVERY category a leg's selection text matches. Used by
+ * computeBetCategory so a single combo leg (e.g. "Wint en Beide teams
+ * scoren") contributes both "resultaat" and "btts" to the bet's category
+ * union — which forces mix detection when expected. */
+export function inferLegCategoriesAll(selectionText: string): Set<LegCategory> {
+  const out = new Set<LegCategory>();
+  for (const { cat, test } of PATTERNS) {
+    if (test(selectionText)) out.add(cat);
+  }
+  if (out.size === 0) out.add("other");
+  return out;
 }
 
 /**
@@ -79,15 +95,18 @@ export function computeBetCategory(bet: Pick<Bet, "selections" | "category">): B
     }
   }
   if (bet.selections.length === 0) return "other";
+  // Aggregate ALL matches per leg, so a combo leg contributes multiple
+  // categories to the union (forces mix when warranted).
   const cats = new Set<LegCategory>();
   for (const sel of bet.selections) {
-    cats.add(inferLegCategory(sel.selection));
+    for (const c of inferLegCategoriesAll(sel.selection)) cats.add(c);
   }
-  if (cats.size === 1) {
-    return [...cats][0];
-  }
-  // If "other" is among them but the rest are the same, prefer the meaningful one.
+  if (cats.size === 0) return "other";
+  // "other" only matters when it's the ONLY thing present. If at least one
+  // meaningful category was detected, drop "other" — unclassified legs
+  // shouldn't count.
   cats.delete("other");
+  if (cats.size === 0) return "other";
   if (cats.size === 1) return [...cats][0];
   return "mix";
 }
