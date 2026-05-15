@@ -8,8 +8,8 @@ import {
   checkEmail,
   loginWithPassword,
   setInitialPassword,
-  MIN_PASSWORD_LEN,
 } from "@/app/login/actions";
+import { MIN_PASSWORD_LEN } from "@/lib/passwordConstants";
 
 type Step =
   | { kind: "email" }

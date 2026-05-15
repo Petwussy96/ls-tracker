@@ -20,7 +20,8 @@ const SCRYPT_KEY_LEN = 64;
 const SCRYPT_SALT_BYTES = 16;
 const SESSION_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-export const MIN_PASSWORD_LEN = 8;
+import { MIN_PASSWORD_LEN } from "./passwordConstants";
+export { MIN_PASSWORD_LEN };
 
 export function isStrongEnough(password: string): boolean {
   return typeof password === "string" && password.length >= MIN_PASSWORD_LEN;

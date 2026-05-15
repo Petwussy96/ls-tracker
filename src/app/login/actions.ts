@@ -6,7 +6,6 @@ import {
   hashPassword,
   isStrongEnough,
   verifyPassword,
-  MIN_PASSWORD_LEN,
 } from "@/lib/password";
 import { rateLimit, sweepExpiredBuckets } from "@/lib/rateLimit";
 
@@ -147,4 +146,3 @@ export async function setInitialPassword(input: {
   }
 }
 
-export { MIN_PASSWORD_LEN };

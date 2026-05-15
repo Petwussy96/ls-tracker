@@ -2,7 +2,7 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
-import { hashPassword, isStrongEnough, MIN_PASSWORD_LEN } from "@/lib/password";
+import { hashPassword, isStrongEnough } from "@/lib/password";
 
 export type SetMyPasswordResult =
   | { ok: true }
@@ -46,4 +46,3 @@ export async function setMyPassword(input: {
   }
 }
 
-export { MIN_PASSWORD_LEN };

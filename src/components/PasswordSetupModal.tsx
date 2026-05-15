@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/I18nContext";
-import { setMyPassword, MIN_PASSWORD_LEN } from "@/app/actions/setMyPassword";
+import { setMyPassword } from "@/app/actions/setMyPassword";
+import { MIN_PASSWORD_LEN } from "@/lib/passwordConstants";
 
 // Forced full-screen modal. Renders only when the server confirmed the
 // current user still has passwordHash = null (i.e. their account predates
