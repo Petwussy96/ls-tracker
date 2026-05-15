@@ -568,6 +568,31 @@ export function parseBetText(rawText: string): ParsedBetText {
       let selectionText = line.raw.substring(0, oddsHit.pos);
       selectionText = selectionText.replace(/[\s@:•·\-—–○]+$/, "").trim();
 
+      // Wrap detection (bet365 Dubbele Kans / Draw Or): if the selection
+      // ends with a connector word like "of" / "en" / "and" / "or", the
+      // visual selection wrapped onto the next line. E.g.
+      //   "Gelijkspel of           1.40"
+      //   "Egersunds"
+      // OCR puts them on separate rows; without this fixup we'd lose the
+      // second word and end up pairing "Gelijkspel of" with just the
+      // description.
+      if (/\b(?:of|en|and|or)\s*$/i.test(selectionText) && i + 1 < allLines.length) {
+        const next = allLines[i + 1];
+        if (
+          next &&
+          !next.isSummary &&
+          next.odds.length === 0 &&
+          !next.hasMatch &&
+          !next.hasSelection &&
+          next.raw.length > 0 &&
+          next.raw.length < 40
+        ) {
+          selectionText = `${selectionText} ${next.raw.trim()}`.replace(/\s+/g, " ").trim();
+          // Mark line consumed so findNearbyMatch skips it.
+          usedMatchIdx.add(i + 1);
+        }
+      }
+
       // Special-case: Toto Spelformulier layout puts the match and the odds
       // on the SAME line, with the selection on lines below. e.g.:
       //   "Chelsea - Manchester City FC 1.66"   ← odds line + hasMatch
