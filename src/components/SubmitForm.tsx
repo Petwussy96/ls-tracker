@@ -70,11 +70,13 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
   const [helpOpen, setHelpOpen] = useState(false);
 
   const isAcca = selections.length > 1;
-  const combinedOdds = selections.reduce(
-    (acc, s) => acc * (Number(s.odds) || 0),
-    1,
-  );
-  const allOddsValid = selections.every((s) => Number(s.odds) > 1);
+  const manualTotalNum = Number(manualTotal.replace(",", "."));
+  const combinedOdds = totalOnlyMode
+    ? manualTotalNum || 0
+    : selections.reduce((acc, s) => acc * (Number(s.odds) || 0), 1);
+  const allOddsValid = totalOnlyMode
+    ? manualTotalNum > 1
+    : selections.every((s) => Number(s.odds) > 1);
 
   function updateSelection(i: number, patch: Partial<SelectionState>) {
     setSelections((prev) => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
@@ -121,6 +123,8 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
 
   function confirmDuplicateAndSubmit() {
     setDuplicateOf(null);
+    setTotalOnlyMode(false);
+    setManualTotal("");
     handleSubmit({ preventDefault: () => {} } as React.FormEvent, true);
   }
 
@@ -130,6 +134,8 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
     setKickoff("");
     setNotes("");
     setDuplicateOf(null);
+    setTotalOnlyMode(false);
+    setManualTotal("");
     setSubmitted(false);
     setError(null);
     setParseStatus({ kind: "idle" });
@@ -176,6 +182,19 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
         return;
       }
 
+      // Detect Unibet-style: multi-leg with all per-leg odds identical
+      // → likely only the combined was on the slip. Auto-enable total-only.
+      const allSame =
+        parsed.selections.length > 1 &&
+        parsed.selections.every((s) => Math.abs(s.odds - parsed.selections[0].odds) < 0.001);
+      if (allSame && parsed.combinedOdds) {
+        setTotalOnlyMode(true);
+        setManualTotal(parsed.combinedOdds.toFixed(2));
+      } else {
+        setTotalOnlyMode(false);
+        setManualTotal("");
+      }
+
       // Populate ALL legs (acca-aware). Format odds to show at least 2 decimals
       // (so "2.00" doesn't get truncated to "2" in the form input).
       setSelections(
@@ -183,7 +202,7 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
           match: s.match,
           competition: s.competition ?? "",
           selection: s.selection,
-          odds: formatOddsForInput(s.odds),
+          odds: allSame ? "" : formatOddsForInput(s.odds),
         })),
       );
 
@@ -380,18 +399,29 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
               />
             </Field>
 
-            <Field label={t("submit.odds")} required>
-              <input
-                type="number"
-                required
-                step="0.01"
-                min="1.01"
-                value={sel.odds}
-                onChange={(e) => updateSelection(i, { odds: e.target.value })}
-                placeholder="1.83"
-                className="input"
-              />
-            </Field>
+            {totalOnlyMode ? (
+              <Field label={t("submit.odds")}>
+                <input
+                  type="text"
+                  value="—"
+                  disabled
+                  className="input text-ink-400 dark:text-ink-500"
+                />
+              </Field>
+            ) : (
+              <Field label={t("submit.odds")} required>
+                <input
+                  type="number"
+                  required
+                  step="0.01"
+                  min="1.01"
+                  value={sel.odds}
+                  onChange={(e) => updateSelection(i, { odds: e.target.value })}
+                  placeholder="1.83"
+                  className="input"
+                />
+              </Field>
+            )}
           </div>
         ))}
 
@@ -403,6 +433,47 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
         >
           {t("submit.addLeg")}
         </button>
+
+        {/* Total-only toggle — for slips that only show combined odds (Unibet) */}
+        {isAcca && (
+          <label className="flex cursor-pointer items-start gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm dark:border-ink-700 dark:bg-ink-800">
+            <input
+              type="checkbox"
+              checked={totalOnlyMode}
+              onChange={(e) => setTotalOnlyMode(e.target.checked)}
+              className="mt-0.5 h-4 w-4"
+            />
+            <span className="flex-1">
+              <span className="font-semibold text-ink-800 dark:text-ink-100">
+                {locale === "nl" ? "Alleen totaal-quotering" : "Total odds only"}
+              </span>
+              <span className="block text-xs text-ink-500 dark:text-ink-400">
+                {locale === "nl"
+                  ? "Sommige bonnen (Unibet bv.) tonen geen odds per wedstrijd. Vink dit aan en vul alleen de totaal-quotering in."
+                  : "Some slips (e.g. Unibet) don't show per-leg odds. Tick this and just fill in the combined total."}
+              </span>
+            </span>
+          </label>
+        )}
+
+        {totalOnlyMode && (
+          <Field
+            label={locale === "nl" ? "Totaal quotering" : "Total odds"}
+            hint={locale === "nl" ? "De gecombineerde quotering van je bon" : "The combined odds from your slip"}
+            required
+          >
+            <input
+              type="number"
+              required
+              step="0.01"
+              min="1.01"
+              value={manualTotal}
+              onChange={(e) => setManualTotal(e.target.value)}
+              placeholder="59.29"
+              className="input text-lg font-bold"
+            />
+          </Field>
+        )}
 
         {/* Combined odds preview */}
         {isAcca && allOddsValid && (

@@ -36,6 +36,12 @@ export function BetCard({
   const visibleSelections =
     isLongAcca && !expanded ? bet.selections.slice(0, COLLAPSED_PREVIEW) : bet.selections;
   const hiddenCount = bet.selections.length - visibleSelections.length;
+  // Per-leg odds were geometrically distributed (Unibet-style slip with only
+  // a combined total) when all legs share the same odds within tolerance.
+  // In that case we hide per-leg odds — they're not real values.
+  const oddsAreDistributed =
+    bet.selections.length > 1 &&
+    bet.selections.every((s) => Math.abs(s.odds - bet.selections[0].odds) < 0.01);
   const isOwner = currentUserId === bet.userId;
   const canModerate = currentUserRole === "admin" || currentUserRole === "moderator";
   const canResolveOpen = bet.status === "open" && (isOwner || canModerate);
@@ -104,7 +110,9 @@ export function BetCard({
           <li key={i} className="text-sm">
             <div className="flex items-baseline justify-between gap-2">
               <span className="font-medium text-ink-800 dark:text-ink-200">{sel.selection}</span>
-              <span className="shrink-0 font-bold text-ink-900 dark:text-white">{formatOdds(sel.odds)}</span>
+              {!oddsAreDistributed && (
+                <span className="shrink-0 font-bold text-ink-900 dark:text-white">{formatOdds(sel.odds)}</span>
+              )}
             </div>
             {isAcca && <div className="text-xs text-ink-400 dark:text-ink-500">{sel.match}</div>}
           </li>
