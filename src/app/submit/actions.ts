@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import type { BetType } from "@/lib/types";
+import { betFingerprint } from "@/lib/betFingerprint";
 
 export type SubmitSelectionInput = {
   match: string;
@@ -21,11 +22,14 @@ export type SubmitBetInput = {
   betType: BetType;
   kickoff: string; // ISO datetime-local string (treated as local time)
   notes?: string;
+  /** Set to true after the user confirms a "you already have this bet" warning. */
+  allowDuplicate?: boolean;
 };
 
 export type SubmitBetResult =
   | { ok: true; betId: string }
-  | { ok: false; error: string };
+  | { ok: false; error: string }
+  | { ok: false; error: "duplicate_warning"; duplicateOfBetId: string };
 
 const ALLOWED_TYPES: BetType[] = [
   "btts",
@@ -81,6 +85,23 @@ export async function submitBet(input: SubmitBetInput): Promise<SubmitBetResult>
 
   const userId = session.user.id;
   const username = session.user.username;
+
+  // Duplicate detection: same user, same fingerprint, status=open. The
+  // client passes allowDuplicate=true after the user confirms in a warning
+  // dialog, so they can intentionally re-submit if needed.
+  if (!input.allowDuplicate) {
+    const recentOpen = await prisma.bet.findMany({
+      where: { userId, status: "open" },
+      include: { selections: true },
+      take: 50,
+      orderBy: { placedAt: "desc" },
+    });
+    const fp = betFingerprint(input.selections);
+    const dup = recentOpen.find((b) => betFingerprint(b.selections) === fp);
+    if (dup) {
+      return { ok: false, error: "duplicate_warning", duplicateOfBetId: dup.id };
+    }
+  }
 
   const bet = await prisma.bet.create({
     data: {

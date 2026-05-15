@@ -64,6 +64,7 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
   const [notes, setNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [duplicateOf, setDuplicateOf] = useState<string | null>(null);
   const [parseStatus, setParseStatus] = useState<ParseStatus>({ kind: "idle" });
   const [dragOver, setDragOver] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -85,9 +86,10 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
     setSelections((prev) => (prev.length <= 1 ? prev : prev.filter((_, idx) => idx !== i)));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent, allowDuplicate = false) {
     e.preventDefault();
     setError(null);
+    if (!allowDuplicate) setDuplicateOf(null);
 
     startTransition(async () => {
       const result = await submitBet({
@@ -100,9 +102,14 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
         betType,
         kickoff,
         notes: notes || undefined,
+        allowDuplicate,
       });
 
       if (!result.ok) {
+        if (result.error === "duplicate_warning" && "duplicateOfBetId" in result) {
+          setDuplicateOf(result.duplicateOfBetId);
+          return;
+        }
         setError(result.error);
         return;
       }
@@ -112,11 +119,17 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
     });
   }
 
+  function confirmDuplicateAndSubmit() {
+    setDuplicateOf(null);
+    handleSubmit({ preventDefault: () => {} } as React.FormEvent, true);
+  }
+
   function resetForm() {
     setSelections([emptySelection()]);
     setBetType("btts");
     setKickoff("");
     setNotes("");
+    setDuplicateOf(null);
     setSubmitted(false);
     setError(null);
     setParseStatus({ kind: "idle" });
@@ -449,9 +462,39 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
           <div className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
         )}
 
+        {duplicateOf && (
+          <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
+            <p className="font-semibold">
+              ⚠️ {locale === "nl" ? "Lijkt hetzelfde als een open bet" : "Looks like an existing open bet"}
+            </p>
+            <p className="mt-1">
+              {locale === "nl"
+                ? "Je hebt al een open bet met exact dezelfde wedstrijden, selecties en odds. Toch doorgaan?"
+                : "You already have an open bet with the same matches, selections, and odds. Submit anyway?"}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={confirmDuplicateAndSubmit}
+                disabled={pending}
+                className="rounded-full bg-amber-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
+              >
+                {locale === "nl" ? "Toch indienen" : "Submit anyway"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setDuplicateOf(null)}
+                className="rounded-full border border-amber-300 bg-white px-4 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-50 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-100"
+              >
+                {locale === "nl" ? "Annuleren" : "Cancel"}
+              </button>
+            </div>
+          </div>
+        )}
+
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || !!duplicateOf}
           className="w-full rounded-full bg-ink-900 px-5 py-3 text-sm font-bold text-white hover:bg-ink-800 disabled:cursor-not-allowed disabled:bg-ink-400"
         >
           {pending
