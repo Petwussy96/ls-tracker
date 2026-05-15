@@ -239,16 +239,16 @@ export function ScreenshotHelpModal({
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:max-w-2xl sm:rounded-3xl"
+        className="max-h-[90vh] w-full overflow-hidden rounded-t-3xl bg-white dark:bg-ink-900 shadow-2xl sm:max-w-2xl sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-ink-100 dark:border-ink-800 px-5 py-4">
           <div>
             <h2 className="text-lg font-black tracking-tight">
               {locale === "nl" ? "Tips voor screenshots" : "Screenshot tips"}
             </h2>
-            <p className="text-xs text-ink-400">
+            <p className="text-xs text-ink-400 dark:text-ink-500">
               {locale === "nl"
                 ? "Hoe je per bookie de beste OCR-resultaten krijgt"
                 : "How to get the best OCR results per bookie"}
@@ -256,7 +256,7 @@ export function ScreenshotHelpModal({
           </div>
           <button
             onClick={onClose}
-            className="rounded-full p-2 text-ink-400 hover:bg-ink-100 hover:text-ink-900"
+            className="rounded-full p-2 text-ink-400 dark:text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-700 dark:bg-ink-800 hover:text-ink-900 dark:hover:text-white dark:text-white"
             aria-label="Close"
           >
             ✕
@@ -264,7 +264,7 @@ export function ScreenshotHelpModal({
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 overflow-x-auto border-b border-ink-100 px-3 py-2 scrollbar-thin">
+        <div className="flex gap-1 overflow-x-auto border-b border-ink-100 dark:border-ink-800 px-3 py-2 scrollbar-thin">
           {TABS.map((tab) => (
             <button
               key={tab.id}
@@ -272,7 +272,7 @@ export function ScreenshotHelpModal({
               className={`shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                 active === tab.id
                   ? "bg-ink-900 text-white"
-                  : "text-ink-600 hover:bg-ink-100"
+                  : "text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-700 dark:bg-ink-800"
               }`}
             >
               {tab.emoji && <span className="mr-1">{tab.emoji}</span>}
@@ -286,17 +286,17 @@ export function ScreenshotHelpModal({
           <h3 className="text-base font-black tracking-tight">{block.title[locale]}</h3>
 
           {block.warning && (
-            <div className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
+            <div className="mt-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
               ⚠️ {block.warning[locale]}
             </div>
           )}
 
           {block.steps && (
             <div className="mt-4">
-              <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-ink-400">
+              <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-ink-400 dark:text-ink-500">
                 {locale === "nl" ? "Stappen" : "Steps"}
               </div>
-              <ol className="space-y-2 text-sm text-ink-700">
+              <ol className="space-y-2 text-sm text-ink-700 dark:text-ink-200">
                 {block.steps[locale].map((step, i) => (
                   <li key={i} className="flex gap-3">
                     <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink-900 text-[11px] font-bold text-white">
@@ -311,10 +311,10 @@ export function ScreenshotHelpModal({
 
           {block.do && (
             <div className="mt-4">
-              <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+              <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">
                 ✓ {locale === "nl" ? "Wel doen" : "Do"}
               </div>
-              <ul className="space-y-1.5 text-sm text-ink-700">
+              <ul className="space-y-1.5 text-sm text-ink-700 dark:text-ink-200">
                 {block.do[locale].map((tip, i) => (
                   <li key={i} className="flex gap-2">
                     <span className="mt-0.5 text-emerald-600">✓</span>
@@ -327,10 +327,10 @@ export function ScreenshotHelpModal({
 
           {block.dont && (
             <div className="mt-4">
-              <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rose-700">
+              <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-200">
                 ✗ {locale === "nl" ? "Niet doen" : "Don't"}
               </div>
-              <ul className="space-y-1.5 text-sm text-ink-700">
+              <ul className="space-y-1.5 text-sm text-ink-700 dark:text-ink-200">
                 {block.dont[locale].map((tip, i) => (
                   <li key={i} className="flex gap-2">
                     <span className="mt-0.5 text-rose-600">✗</span>
@@ -343,7 +343,7 @@ export function ScreenshotHelpModal({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-ink-100 px-5 py-3 text-center">
+        <div className="border-t border-ink-100 dark:border-ink-800 px-5 py-3 text-center">
           <button
             onClick={onClose}
             className="rounded-full bg-ink-900 px-5 py-2 text-sm font-semibold text-white hover:bg-ink-800"

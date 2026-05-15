@@ -100,7 +100,7 @@ export function JoinForm({ prefillCode }: { prefillCode: string }) {
         <h1 className="text-3xl font-black tracking-tight">
           {locale === "nl" ? "Aanmelden" : "Join"}
         </h1>
-        <p className="mt-1 text-ink-600">
+        <p className="mt-1 text-ink-600 dark:text-ink-300">
           {step === "code"
             ? locale === "nl"
               ? "Voer je uitnodigingscode in. Deze krijg je van een beheerder in de Facebook-groep."
@@ -114,10 +114,10 @@ export function JoinForm({ prefillCode }: { prefillCode: string }) {
       {step === "code" && (
         <form
           onSubmit={handleCodeSubmit}
-          className="space-y-4 rounded-2xl border border-ink-200 bg-white p-5 shadow-sm"
+          className="space-y-4 rounded-2xl border border-ink-200 dark:border-ink-800 bg-white dark:bg-ink-900 p-5 shadow-sm"
         >
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-ink-600">
+            <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-ink-600 dark:text-ink-300">
               {locale === "nl" ? "Uitnodigingscode" : "Invite code"}
             </span>
             <input
@@ -132,7 +132,7 @@ export function JoinForm({ prefillCode }: { prefillCode: string }) {
           </label>
 
           {error && (
-            <div className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+            <div className="rounded-xl bg-rose-50 dark:bg-rose-950/40 px-4 py-3 text-sm text-rose-700 dark:text-rose-200">{error}</div>
           )}
 
           <button
@@ -154,9 +154,9 @@ export function JoinForm({ prefillCode }: { prefillCode: string }) {
       {step === "details" && (
         <form
           onSubmit={handleDetailsSubmit}
-          className="space-y-4 rounded-2xl border border-ink-200 bg-white p-5 shadow-sm"
+          className="space-y-4 rounded-2xl border border-ink-200 dark:border-ink-800 bg-white dark:bg-ink-900 p-5 shadow-sm"
         >
-          <div className="rounded-xl bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
+          <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 px-4 py-2 text-sm text-emerald-800 dark:text-emerald-200">
             ✓ {locale === "nl" ? "Code geldig" : "Code valid"}{" "}
             <span className="font-mono text-xs">{code}</span>
           </div>
@@ -241,7 +241,7 @@ export function JoinForm({ prefillCode }: { prefillCode: string }) {
           </Field>
 
           {error && (
-            <div className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+            <div className="rounded-xl bg-rose-50 dark:bg-rose-950/40 px-4 py-3 text-sm text-rose-700 dark:text-rose-200">{error}</div>
           )}
 
           <button
@@ -260,9 +260,9 @@ export function JoinForm({ prefillCode }: { prefillCode: string }) {
         </form>
       )}
 
-      <p className="mt-6 text-center text-sm text-ink-600">
+      <p className="mt-6 text-center text-sm text-ink-600 dark:text-ink-300">
         {locale === "nl" ? "Al een account?" : "Already have an account?"}{" "}
-        <Link href="/login" className="font-semibold text-ink-900 hover:underline">
+        <Link href="/login" className="font-semibold text-ink-900 dark:text-white hover:underline">
           {locale === "nl" ? "Inloggen" : "Sign in"}
         </Link>
       </p>
@@ -338,12 +338,12 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-ink-600">
+      <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-ink-600 dark:text-ink-300">
         {label}
         {required && <span className="ml-0.5 text-rose-500">*</span>}
       </span>
       {children}
-      {hint && <span className="mt-1 block text-[11px] text-ink-400">{hint}</span>}
+      {hint && <span className="mt-1 block text-[11px] text-ink-400 dark:text-ink-500">{hint}</span>}
     </label>
   );
 }

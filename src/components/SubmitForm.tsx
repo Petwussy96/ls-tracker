@@ -95,13 +95,20 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
     setError(null);
     if (!allowDuplicate) setDuplicateOf(null);
 
+    // In total-only mode, distribute the manual total odds as the geometric
+    // mean per leg so the DB stores valid leg odds. BetCard detects the
+    // all-same pattern and hides per-leg odds from the display.
+    const legOddsForSubmit: number[] = totalOnlyMode
+      ? selections.map(() => +Math.pow(manualTotalNum || 1, 1 / Math.max(1, selections.length)).toFixed(3))
+      : selections.map((s) => Number(s.odds));
+
     startTransition(async () => {
       const result = await submitBet({
-        selections: selections.map((s) => ({
+        selections: selections.map((s, i) => ({
           match: s.match,
           competition: s.competition || undefined,
           selection: s.selection,
-          odds: Number(s.odds),
+          odds: legOddsForSubmit[i],
         })),
         betType,
         kickoff,
@@ -125,8 +132,6 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
 
   function confirmDuplicateAndSubmit() {
     setDuplicateOf(null);
-    setTotalOnlyMode(false);
-    setManualTotal("");
     handleSubmit({ preventDefault: () => {} } as React.FormEvent, true);
   }
 
@@ -264,7 +269,7 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
         <h1 className="mt-4 text-2xl font-black">
           {locale === "nl" ? "Bet geplaatst!" : "Bet placed!"}
         </h1>
-        <p className="mt-2 text-ink-600">
+        <p className="mt-2 text-ink-600 dark:text-ink-300">
           {locale === "nl"
             ? "Veel succes — je staat nu in de open bets feed."
             : "Good luck — you're now in the open bets feed."}
@@ -278,13 +283,13 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
           </button>
           <a
             href="/bets"
-            className="rounded-full border border-ink-200 bg-white px-5 py-2.5 text-sm font-semibold text-ink-900 hover:bg-ink-100"
+            className="rounded-full border border-ink-200 dark:border-ink-800 bg-white dark:bg-ink-900 px-5 py-2.5 text-sm font-semibold text-ink-900 dark:text-white hover:bg-ink-100 dark:hover:bg-ink-700 dark:bg-ink-800"
           >
             {t("nav.openBets")}
           </a>
           <a
             href={`/profile/${currentUser.username}`}
-            className="rounded-full border border-ink-200 bg-white px-5 py-2.5 text-sm font-semibold text-ink-900 hover:bg-ink-100"
+            className="rounded-full border border-ink-200 dark:border-ink-800 bg-white dark:bg-ink-900 px-5 py-2.5 text-sm font-semibold text-ink-900 dark:text-white hover:bg-ink-100 dark:hover:bg-ink-700 dark:bg-ink-800"
           >
             {t("nav.profile")}
           </a>
@@ -297,10 +302,10 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
     <div className="mx-auto max-w-xl">
       <div className="mb-6">
         <h1 className="text-3xl font-black tracking-tight">{t("submit.title")}</h1>
-        <p className="mt-1 text-ink-600">{t("submit.subtitle")}</p>
-        <p className="mt-2 text-xs text-ink-400">
+        <p className="mt-1 text-ink-600 dark:text-ink-300">{t("submit.subtitle")}</p>
+        <p className="mt-2 text-xs text-ink-400 dark:text-ink-500">
           {locale === "nl" ? "Geplaatst als" : "Posting as"}{" "}
-          <span className="font-semibold text-ink-700">{currentUser.displayName}</span>
+          <span className="font-semibold text-ink-700 dark:text-ink-200">{currentUser.displayName}</span>
         </p>
       </div>
 
@@ -330,7 +335,7 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
         <button
           type="button"
           onClick={() => setHelpOpen(true)}
-          className="inline-flex items-center gap-1 text-xs font-semibold text-ink-600 hover:text-ink-900"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-ink-600 hover:text-ink-900 dark:hover:text-white dark:text-white"
         >
           💡 {locale === "nl" ? "Hoe maak ik een goede screenshot per bookie?" : "How to screenshot per bookie?"}
         </button>
@@ -340,7 +345,7 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
 
       <form
         onSubmit={handleSubmit}
-        className="mt-6 space-y-4 rounded-2xl border border-ink-200 bg-white p-5 shadow-sm"
+        className="mt-6 space-y-4 rounded-2xl border border-ink-200 dark:border-ink-800 bg-white dark:bg-ink-900 p-5 shadow-sm"
       >
         {/* Selections */}
         {selections.map((sel, i) => (
@@ -348,13 +353,13 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
             key={i}
             className={
               isAcca
-                ? "relative rounded-xl border border-ink-100 bg-ink-50/40 p-4"
+                ? "relative rounded-xl border border-ink-100 dark:border-ink-800 bg-ink-50 dark:bg-ink-800/40 p-4"
                 : "space-y-4"
             }
           >
             {isAcca && (
               <div className="mb-3 flex items-center justify-between">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-ink-500">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-ink-500 dark:text-ink-400 dark:text-ink-500">
                   {t("submit.legNumber").replace("{n}", String(i + 1))}
                 </div>
                 {selections.length > 1 && (
@@ -407,7 +412,7 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
                   type="text"
                   value="—"
                   disabled
-                  className="input text-ink-400 dark:text-ink-500"
+                  className="input text-ink-400 dark:text-ink-500 dark:text-ink-400 dark:text-ink-500"
                 />
               </Field>
             ) : (
@@ -431,7 +436,7 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
         <button
           type="button"
           onClick={addLeg}
-          className="w-full rounded-xl border-2 border-dashed border-ink-200 px-4 py-2.5 text-xs font-semibold text-ink-600 hover:border-ink-400 hover:bg-ink-50"
+          className="w-full rounded-xl border-2 border-dashed border-ink-200 dark:border-ink-800 px-4 py-2.5 text-xs font-semibold text-ink-600 dark:text-ink-300 hover:border-ink-400 hover:bg-ink-50 dark:hover:bg-ink-800 dark:bg-ink-800"
         >
           {t("submit.addLeg")}
         </button>
@@ -449,7 +454,7 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
               <span className="font-semibold text-ink-800 dark:text-ink-100">
                 {locale === "nl" ? "Alleen totaal-quotering" : "Total odds only"}
               </span>
-              <span className="block text-xs text-ink-500 dark:text-ink-400">
+              <span className="block text-xs text-ink-500 dark:text-ink-400 dark:text-ink-500">
                 {locale === "nl"
                   ? "Sommige bonnen (Unibet bv.) tonen geen odds per wedstrijd. Vink dit aan en vul alleen de totaal-quotering in."
                   : "Some slips (e.g. Unibet) don't show per-leg odds. Tick this and just fill in the combined total."}
@@ -479,16 +484,16 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
 
         {/* Combined odds preview */}
         {isAcca && allOddsValid && (
-          <div className="rounded-xl bg-emerald-50 px-4 py-3 ring-1 ring-emerald-200">
+          <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 px-4 py-3 ring-1 ring-emerald-200">
             <div className="flex items-baseline justify-between">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-200">
                 {t("submit.combinedOdds")}
               </div>
-              <div className="text-2xl font-black tracking-tight text-emerald-900">
+              <div className="text-2xl font-black tracking-tight text-emerald-900 dark:text-emerald-100">
                 {formatOdds(combinedOdds)}
               </div>
             </div>
-            <div className="mt-1 text-[11px] text-emerald-700">
+            <div className="mt-1 text-[11px] text-emerald-700 dark:text-emerald-200">
               {t("submit.combiPotentialNote").replace("{n}", String(selections.length))}
             </div>
           </div>
@@ -532,11 +537,11 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
         </Field>
 
         {error && (
-          <div className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+          <div className="rounded-xl bg-rose-50 dark:bg-rose-950/40 px-4 py-3 text-sm text-rose-700 dark:text-rose-200">{error}</div>
         )}
 
         {duplicateOf && (
-          <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
+          <div className="rounded-xl border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
             <p className="font-semibold">
               ⚠️ {locale === "nl" ? "Lijkt hetzelfde als een open bet" : "Looks like an existing open bet"}
             </p>
@@ -557,7 +562,7 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
               <button
                 type="button"
                 onClick={() => setDuplicateOf(null)}
-                className="rounded-full border border-amber-300 bg-white px-4 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-50 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-100"
+                className="rounded-full border border-amber-300 dark:border-amber-800 bg-white dark:bg-ink-900 px-4 py-1.5 text-xs font-semibold text-amber-800 dark:text-amber-200 hover:bg-amber-50 dark:hover:bg-amber-900 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-100"
               >
                 {locale === "nl" ? "Annuleren" : "Cancel"}
               </button>
@@ -612,23 +617,23 @@ function ScreenshotDropzone({
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        className={`cursor-pointer rounded-2xl border-2 border-dashed bg-white p-6 text-center transition ${
+        className={`cursor-pointer rounded-2xl border-2 border-dashed bg-white dark:bg-ink-900 p-6 text-center transition ${
           dragOver
-            ? "border-ink-900 bg-ink-50"
-            : "border-ink-200 hover:border-ink-400 hover:bg-ink-50"
+            ? "border-ink-900 bg-ink-50 dark:bg-ink-800"
+            : "border-ink-200 dark:border-ink-800 hover:border-ink-400 hover:bg-ink-50 dark:hover:bg-ink-800 dark:bg-ink-800"
         }`}
       >
         <div className="text-3xl">📸</div>
-        <div className="mt-2 font-semibold text-ink-900">{t("submit.uploadScreenshot")}</div>
-        <div className="mt-1 text-xs text-ink-400">{t("submit.uploadDragHere")}</div>
-        <div className="mt-1 text-[10px] text-ink-400">{t("submit.uploadHint")}</div>
+        <div className="mt-2 font-semibold text-ink-900 dark:text-white">{t("submit.uploadScreenshot")}</div>
+        <div className="mt-1 text-xs text-ink-400 dark:text-ink-500">{t("submit.uploadDragHere")}</div>
+        <div className="mt-1 text-[10px] text-ink-400 dark:text-ink-500">{t("submit.uploadHint")}</div>
       </div>
     );
   }
 
   if (status.kind === "parsing") {
     return (
-      <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-5">
+      <div className="rounded-2xl border-2 border-dashed border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 p-5">
         <div className="flex items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -641,7 +646,7 @@ function ScreenshotDropzone({
               <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-amber-700 border-t-transparent" />
               {t("submit.uploadParsing")}
             </div>
-            <div className="mt-1 truncate text-xs text-amber-700">{status.filename}</div>
+            <div className="mt-1 truncate text-xs text-amber-700 dark:text-amber-200">{status.filename}</div>
           </div>
         </div>
       </div>
@@ -650,7 +655,7 @@ function ScreenshotDropzone({
 
   if (status.kind === "error") {
     return (
-      <div className="rounded-2xl border-2 border-dashed border-rose-300 bg-rose-50 p-5">
+      <div className="rounded-2xl border-2 border-dashed border-rose-300 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 p-5">
         <div className="flex items-start gap-4">
           {status.previewUrl && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -676,14 +681,14 @@ function ScreenshotDropzone({
 
   // success
   const confidenceColor = {
-    high: "bg-emerald-100 text-emerald-700 ring-emerald-200",
-    medium: "bg-amber-100 text-amber-800 ring-amber-200",
-    low: "bg-rose-100 text-rose-700 ring-rose-200",
+    high: "bg-emerald-100 text-emerald-700 dark:text-emerald-200 ring-emerald-200",
+    medium: "bg-amber-100 text-amber-800 dark:text-amber-200 ring-amber-200",
+    low: "bg-rose-100 text-rose-700 dark:text-rose-200 ring-rose-200",
   }[status.confidence];
 
   return (
     <div className="space-y-2">
-      <div className="rounded-2xl border-2 border-dashed border-emerald-300 bg-emerald-50 p-5">
+      <div className="rounded-2xl border-2 border-dashed border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 p-5">
         <div className="flex items-start gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -693,7 +698,7 @@ function ScreenshotDropzone({
           />
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="text-sm font-semibold text-emerald-900">
+              <div className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
                 ✓ {t("submit.uploadSuccess")}
               </div>
               <span
@@ -724,10 +729,10 @@ function ScreenshotDropzone({
                 </span>
               )}
             </div>
-            <div className="mt-1 truncate text-xs text-emerald-700">{status.filename}</div>
+            <div className="mt-1 truncate text-xs text-emerald-700 dark:text-emerald-200">{status.filename}</div>
             <button
               onClick={onReset}
-              className="mt-2 text-xs font-semibold text-emerald-700 underline hover:text-emerald-900"
+              className="mt-2 text-xs font-semibold text-emerald-700 dark:text-emerald-200 underline hover:text-emerald-900 dark:text-emerald-100"
             >
               {t("submit.uploadAnother")}
             </button>
@@ -736,17 +741,17 @@ function ScreenshotDropzone({
       </div>
 
       {status.confidence === "low" && (
-        <div className="rounded-xl bg-rose-50 px-4 py-3 text-xs text-rose-700 ring-1 ring-rose-200">
+        <div className="rounded-xl bg-rose-50 dark:bg-rose-950/40 px-4 py-3 text-xs text-rose-700 dark:text-rose-200 ring-1 ring-rose-200">
           {t("submit.uploadLowConfidence")}
         </div>
       )}
 
       {status.rawText && (
-        <details className="rounded-xl border border-ink-200 bg-white px-4 py-2 text-xs text-ink-600">
-          <summary className="cursor-pointer font-semibold text-ink-600 hover:text-ink-900">
+        <details className="rounded-xl border border-ink-200 dark:border-ink-800 bg-white dark:bg-ink-900 px-4 py-2 text-xs text-ink-600 dark:text-ink-300">
+          <summary className="cursor-pointer font-semibold text-ink-600 hover:text-ink-900 dark:hover:text-white dark:text-white">
             {locale === "nl" ? "Toon ruwe OCR-tekst" : "Show raw OCR text"}
           </summary>
-          <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap rounded-md bg-ink-50 p-3 text-[11px] leading-relaxed text-ink-700">
+          <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap rounded-md bg-ink-50 dark:bg-ink-800 p-3 text-[11px] leading-relaxed text-ink-700 dark:text-ink-200">
             {status.rawText.trim()}
           </pre>
         </details>
@@ -785,7 +790,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-ink-600">
+      <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-ink-600 dark:text-ink-300">
         {label}
         {required && <span className="ml-0.5 text-rose-500">*</span>}
       </span>

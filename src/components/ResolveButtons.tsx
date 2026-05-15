@@ -48,7 +48,7 @@ export function ResolveButtons({
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className="mt-3 inline-flex items-center gap-1 rounded-full border border-ink-200 px-3 py-1 text-[11px] font-semibold text-ink-600 hover:bg-ink-50"
+        className="mt-3 inline-flex items-center gap-1 rounded-full border border-ink-200 dark:border-ink-800 px-3 py-1 text-[11px] font-semibold text-ink-600 dark:text-ink-300 hover:bg-ink-50 dark:hover:bg-ink-800 dark:bg-ink-800"
       >
         ✏ {t("resolve.adminOverride")}
       </button>
@@ -57,7 +57,7 @@ export function ResolveButtons({
 
   return (
     <div className="mt-3 space-y-2">
-      <div className="text-[10px] uppercase tracking-wider text-ink-400">
+      <div className="text-[10px] uppercase tracking-wider text-ink-400 dark:text-ink-500">
         {t("resolve.prompt")}
       </div>
       <div className="grid grid-cols-3 gap-2">
@@ -84,13 +84,13 @@ export function ResolveButtons({
         />
       </div>
       {error && (
-        <div className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</div>
+        <div className="rounded-lg bg-rose-50 dark:bg-rose-950/40 px-3 py-2 text-xs text-rose-700 dark:text-rose-200">{error}</div>
       )}
       {showAdminOverride && expanded && (
         <button
           type="button"
           onClick={() => setExpanded(false)}
-          className="text-[11px] font-semibold text-ink-400 hover:text-ink-600"
+          className="text-[11px] font-semibold text-ink-400 hover:text-ink-600 dark:hover:text-ink-300 dark:text-ink-300"
         >
           {locale === "nl" ? "Annuleren" : "Cancel"}
         </button>
@@ -115,13 +115,13 @@ function ResolveButton({
   const palette = {
     won: active
       ? "bg-emerald-600 text-white hover:bg-emerald-700"
-      : "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50",
+      : "bg-white dark:bg-ink-900 border border-emerald-200 text-emerald-700 dark:text-emerald-200 hover:bg-emerald-50 dark:bg-emerald-950/40",
     lost: active
       ? "bg-rose-600 text-white hover:bg-rose-700"
-      : "bg-white border border-rose-200 text-rose-700 hover:bg-rose-50",
+      : "bg-white dark:bg-ink-900 border border-rose-200 text-rose-700 dark:text-rose-200 hover:bg-rose-50 dark:hover:bg-rose-900 dark:bg-rose-950/40",
     void: active
       ? "bg-ink-600 text-white hover:bg-ink-700"
-      : "bg-white border border-ink-200 text-ink-600 hover:bg-ink-50",
+      : "bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 text-ink-600 dark:text-ink-300 hover:bg-ink-50 dark:hover:bg-ink-800 dark:bg-ink-800",
   }[tone];
 
   return (
