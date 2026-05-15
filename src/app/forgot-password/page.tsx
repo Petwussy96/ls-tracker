@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <a
-            href="https://m.me/iwan.dimitrijevic.7"
+            href="https://m.me/iwan.dimitrijevic.5"
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-full bg-ink-900 px-5 py-2 text-sm font-semibold text-white hover:bg-ink-800 dark:bg-white dark:text-ink-900 dark:hover:bg-ink-100"
