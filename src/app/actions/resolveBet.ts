@@ -22,8 +22,8 @@ const RESOLVABLE_STATUSES: BetStatus[] = ["won", "lost", "void"];
 /**
  * Resolve an open bet to won/lost/void.
  * - Owners can resolve their own open bets.
- * - Admins can resolve any open bet (also lets them correct bad calls).
- * - An admin can re-resolve an already-settled bet; members cannot.
+ * - Mods + admins can resolve / re-resolve any bet (correct bad calls).
+ * - Plain members can only resolve OPEN bets they own.
  */
 export async function resolveBet(
   betId: string,
@@ -43,11 +43,12 @@ export async function resolveBet(
   if (!bet) return { ok: false, error: "not_found" };
 
   const isOwner = bet.userId === session.user.id;
-  const isAdmin = session.user.role === "admin";
-  if (!isOwner && !isAdmin) return { ok: false, error: "not_authorized" };
+  const role = session.user.role;
+  const canModerate = role === "admin" || role === "moderator";
+  if (!isOwner && !canModerate) return { ok: false, error: "not_authorized" };
 
-  // Members can only resolve OPEN bets. Admins may correct settled bets too.
-  if (bet.status !== "open" && !isAdmin) {
+  // Members can only resolve OPEN bets. Mods + admins may correct settled bets too.
+  if (bet.status !== "open" && !canModerate) {
     return { ok: false, error: "already_resolved" };
   }
 
@@ -59,7 +60,6 @@ export async function resolveBet(
     },
   });
 
-  // Refresh anything that reads from this bet.
   revalidatePath("/");
   revalidatePath("/bets");
   revalidatePath(`/profile/${bet.user.username}`);

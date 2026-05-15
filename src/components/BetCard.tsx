@@ -11,6 +11,7 @@ import { ReportButton } from "@/components/ReportButton";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { computeBetCategory } from "@/lib/betCategory";
 import { Avatar } from "@/components/Avatar";
+import { RoleBadge, avatarRingClass } from "@/components/RoleBadge";
 
 // Long acca's get a collapsible body so a 12-leg combi doesn't take half the page.
 const LONG_ACCA_THRESHOLD = 6;
@@ -36,12 +37,11 @@ export function BetCard({
     isLongAcca && !expanded ? bet.selections.slice(0, COLLAPSED_PREVIEW) : bet.selections;
   const hiddenCount = bet.selections.length - visibleSelections.length;
   const isOwner = currentUserId === bet.userId;
-  const isAdmin = currentUserRole === "admin";
-  const canResolveOpen = bet.status === "open" && (isOwner || isAdmin);
-  const canAdminOverride = bet.status !== "open" && isAdmin;
+  const canModerate = currentUserRole === "admin" || currentUserRole === "moderator";
+  const canResolveOpen = bet.status === "open" && (isOwner || canModerate);
+  const canAdminOverride = bet.status !== "open" && canModerate;
   const category = computeBetCategory(bet);
 
-  // Status-driven design accents — pill color + top accent strip color
   const statusPill =
     bet.status === "won"
       ? "bg-emerald-100 text-emerald-700 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:ring-emerald-900"
@@ -62,7 +62,6 @@ export function BetCard({
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-ink-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md dark:border-ink-800 dark:bg-ink-900">
-      {/* Status accent strip on top */}
       <div className={`absolute inset-x-0 top-0 h-1 ${accentStrip}`} aria-hidden />
 
       <div className="flex items-start justify-between gap-3">
@@ -72,8 +71,9 @@ export function BetCard({
               href={`/profile/${user.username}`}
               className="mb-1 inline-flex items-center gap-2 text-xs font-semibold text-ink-600 hover:text-ink-900 dark:text-ink-400 dark:hover:text-white"
             >
-              <Avatar user={user} size={20} className="ring-halo" />
-              {user.displayName}
+              <Avatar user={user} size={20} className={avatarRingClass(user.role)} />
+              <span>{user.displayName}</span>
+              <RoleBadge role={user.role} />
             </Link>
           )}
           <div className="text-sm font-semibold text-ink-900 dark:text-white">
@@ -95,7 +95,6 @@ export function BetCard({
         </div>
       </div>
 
-      {/* Selections */}
       <ul className={`mt-3 space-y-1.5 ${isAcca ? "border-l-2 border-ink-100 pl-3 dark:border-ink-800" : ""}`}>
         {visibleSelections.map((sel, i) => (
           <li key={i} className="text-sm">
@@ -108,7 +107,6 @@ export function BetCard({
         ))}
       </ul>
 
-      {/* Expand/collapse toggle for long acca's */}
       {isLongAcca && (
         <button
           type="button"
@@ -118,11 +116,11 @@ export function BetCard({
         >
           {expanded
             ? locale === "nl"
-              ? "Klap in ▲"
-              : "Collapse ▲"
+              ? "Klap in"
+              : "Collapse"
             : locale === "nl"
-              ? `Toon nog ${hiddenCount} benen ▼`
-              : `Show ${hiddenCount} more legs ▼`}
+              ? `Toon nog ${hiddenCount} benen`
+              : `Show ${hiddenCount} more legs`}
         </button>
       )}
 
@@ -132,7 +130,6 @@ export function BetCard({
         </div>
       )}
 
-      {/* Footer: odds + timing */}
       <div className="mt-3 flex items-end justify-between border-t border-ink-100 pt-3 dark:border-ink-800">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-ink-400 dark:text-ink-500">
@@ -159,13 +156,11 @@ export function BetCard({
         </div>
       </div>
 
-      {/* Resolution UI */}
       {canResolveOpen && <ResolveButtons betId={bet.id} betStatus={bet.status} />}
       {canAdminOverride && (
         <ResolveButtons betId={bet.id} betStatus={bet.status} showAdminOverride />
       )}
 
-      {/* Report flag — only on resolved bets, by non-owners, when logged in */}
       {!isOwner && !!currentUserId && bet.status !== "open" && (
         <ReportButton betId={bet.id} />
       )}

@@ -14,7 +14,7 @@ const REPORT_THRESHOLD = 3;
 export default async function ReportsAdminPage() {
   const session = await auth();
   if (!session?.user) redirect("/login?next=/admin/reports");
-  if (session.user.role !== "admin") {
+  if (session.user.role !== "admin" && session.user.role !== "moderator") {
     return (
       <div className="py-16 text-center text-ink-600 dark:text-ink-300">
         <div className="text-5xl">🔒</div>

@@ -12,9 +12,11 @@ const REPORT_THRESHOLD = 3;
 export default async function AdminDashboardPage() {
   const session = await auth();
   if (!session?.user) redirect("/login?next=/admin");
-  if (session.user.role !== "admin") {
+  const role = session.user.role;
+  if (role !== "admin" && role !== "moderator") {
     return <NoAccess />;
   }
+  const isAdminUser = role === "admin";
 
   // Parallel queries — none of these depend on each other.
   const [
@@ -123,18 +125,28 @@ export default async function AdminDashboardPage() {
               </span>
             )}
           </Link>
-          <Link
-            href="/admin/invites"
-            className="rounded-full border border-ink-200 bg-white px-4 py-2 font-semibold text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200 dark:hover:bg-ink-700"
-          >
-            ✉️ Invites
-          </Link>
-          <Link
-            href="/admin/magic"
-            className="rounded-full border border-ink-200 bg-white px-4 py-2 font-semibold text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200 dark:hover:bg-ink-700"
-          >
-            🔗 Magic-link
-          </Link>
+          {isAdminUser && (
+            <>
+              <Link
+                href="/admin/invites"
+                className="rounded-full border border-ink-200 bg-white px-4 py-2 font-semibold text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200 dark:hover:bg-ink-700"
+              >
+                ✉️ Invites
+              </Link>
+              <Link
+                href="/admin/magic"
+                className="rounded-full border border-ink-200 bg-white px-4 py-2 font-semibold text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200 dark:hover:bg-ink-700"
+              >
+                🔗 Magic-link
+              </Link>
+              <Link
+                href="/admin/users"
+                className="rounded-full border border-ink-200 bg-white px-4 py-2 font-semibold text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200 dark:hover:bg-ink-700"
+              >
+                👥 Users
+              </Link>
+            </>
+          )}
           <Link
             href="/admin/feedback"
             className="rounded-full border border-ink-200 bg-white px-4 py-2 font-semibold text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200 dark:hover:bg-ink-700"

@@ -16,7 +16,7 @@ export type BetType =
   | "accumulator"
   | "other";
 
-export type UserRole = "member" | "admin";
+export type UserRole = "member" | "moderator" | "admin";
 
 export interface User {
   id: string;

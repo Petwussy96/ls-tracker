@@ -9,6 +9,7 @@ import type { Bet, User } from "@/lib/types";
 import { StatCard } from "@/components/StatCard";
 import { StreakBadge } from "@/components/StreakBadge";
 import { Avatar } from "@/components/Avatar";
+import { RoleBadge, avatarRingClass } from "@/components/RoleBadge";
 import {
   CategoryFilterChips,
   applyCategoryFilter,
@@ -230,10 +231,11 @@ export function LeaderboardClient({
                         href={`/profile/${stats.user.username}`}
                         className="inline-flex items-center gap-2 group"
                       >
-                        <Avatar user={stats.user} size={28} className="ring-halo" />
+                        <Avatar user={stats.user} size={28} className={avatarRingClass(stats.user.role)} />
                         <span>
                           <span className="block font-semibold text-ink-900 group-hover:underline dark:text-white">
-                            {stats.user.displayName}
+                            <span className="mr-1.5">{stats.user.displayName}</span>
+                            <RoleBadge role={stats.user.role} size="sm" />
                           </span>
                           <span className="block text-xs text-ink-400 dark:text-ink-500">
                             @{stats.user.username}

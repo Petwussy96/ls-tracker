@@ -15,7 +15,7 @@ export default async function FeedbackAdminPage({
 }) {
   const session = await auth();
   if (!session?.user) redirect("/login?next=/admin/feedback");
-  if (session.user.role !== "admin") {
+  if (session.user.role !== "admin" && session.user.role !== "moderator") {
     return (
       <div className="py-16 text-center text-ink-600 dark:text-ink-300">
         <div className="text-5xl">🔒</div>

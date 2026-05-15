@@ -14,7 +14,7 @@ export type HeaderUser = {
   id: string;
   username: string;
   displayName: string;
-  role: "member" | "admin";
+  role: "member" | "moderator" | "admin";
   image?: string | null;
 };
 
@@ -162,13 +162,19 @@ function UserMenu({
             >
               {t("nav.profile")}
             </Link>
-            {user.role === "admin" && (
+            {(user.role === "admin" || user.role === "moderator") && (
               <Link
                 href="/admin"
                 onClick={onClose}
                 className="block px-4 py-1.5 text-sm text-ink-700 hover:bg-ink-50 dark:text-ink-200 dark:hover:bg-ink-700"
               >
-                {locale === "nl" ? "Admin dashboard" : "Admin dashboard"}
+                {user.role === "admin"
+                  ? locale === "nl"
+                    ? "👑 Admin dashboard"
+                    : "👑 Admin dashboard"
+                  : locale === "nl"
+                    ? "🛡️ Moderator dashboard"
+                    : "🛡️ Moderator dashboard"}
               </Link>
             )}
             <FeedbackButton variant="menu" />
