@@ -127,6 +127,12 @@ export default async function AdminDashboardPage() {
           >
             ✉️ Invites
           </Link>
+          <Link
+            href="/admin/magic"
+            className="rounded-full border border-ink-200 bg-white px-4 py-2 font-semibold text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200 dark:hover:bg-ink-700"
+          >
+            🔗 Magic-link
+          </Link>
         </nav>
       </div>
 
