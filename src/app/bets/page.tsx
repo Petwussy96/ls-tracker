@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { BetsClient } from "@/components/BetsClient";
 import { getAllBets, getAllUsers } from "@/lib/queries";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
 export default async function OpenBetsPage() {
   const [users, bets, session] = await Promise.all([getAllUsers(), getAllBets(), auth()]);

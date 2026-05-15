@@ -8,6 +8,7 @@ declare module "next-auth" {
       id: string;
       username: string;
       role: "member" | "moderator" | "admin";
+      needsPasswordSetup?: boolean;
     } & DefaultSession["user"];
   }
 

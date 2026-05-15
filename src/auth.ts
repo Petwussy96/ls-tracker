@@ -8,13 +8,14 @@
 //   accounts that were pre-created via /join (invite code flow).
 
 import NextAuth from "next-auth";
+import { cache } from "react";
 import Resend from "next-auth/providers/resend";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
 
 const EMAIL_FROM = process.env.EMAIL_FROM || "LS Tracker <onboarding@resend.dev>";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const nextAuthExports = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "database" },
   pages: {
@@ -79,6 +80,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const u = user as any;
         session.user.username = u.username;
         session.user.role = u.role ?? "member";
+        // Whether the user still needs to choose a password (legacy accounts
+        // from before the password switch). Read from the User row that
+        // PrismaAdapter already loaded — saves the layout an extra query.
+        session.user.needsPasswordSetup = !u.passwordHash;
         // Our User model uses `displayName` rather than the default `name`,
         // so populate `session.user.name` from displayName for consistency.
         if (u.displayName) {
@@ -116,3 +121,9 @@ function renderMagicLinkEmail(url: string): string {
 </html>
   `.trim();
 }
+
+
+// React cache() dedupes auth() within a single request — so the root layout
+// and the page component share a single session lookup instead of two.
+export const { handlers, signIn, signOut } = nextAuthExports;
+export const auth = cache(nextAuthExports.auth);
