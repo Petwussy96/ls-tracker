@@ -33,6 +33,8 @@ model User {
   consumedInvites InviteCode[] @relation("InviteConsumer")
   reportsFiled    BetReport[]  @relation("Reporter")
   reportsReviewed BetReport[]  @relation("Reviewer")
+  feedbackSent    Feedback[]   @relation("FeedbackAuthor")
+  feedbackResolved Feedback[]  @relation("FeedbackResolver")
 }
 
 // Auth.js standard tables. Names + fields must match what the Prisma adapter expects.
@@ -151,4 +153,27 @@ model BetReport {
   @@unique([betId, reporterId])
   @@index([betId])
   @@index([reviewedAt])
+}
+
+// ============ Feedback ============
+//
+// In-app feedback from any signed-in user. Categorized so the admin can
+// triage; optional screenshot stored in Cloudinary.
+
+model Feedback {
+  id           String    @id @default(cuid())
+  userId       String?
+  category     String // "bug" | "parser" | "feature" | "design" | "other"
+  message      String    @db.Text
+  screenshot   String? // Cloudinary URL
+  status       String    @default("open") // "open" | "addressed" | "wontfix"
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+  resolvedById String?
+
+  user       User? @relation("FeedbackAuthor", fields: [userId], references: [id], onDelete: SetNull)
+  resolvedBy User? @relation("FeedbackResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([createdAt])
 }

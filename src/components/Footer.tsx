@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { useI18n } from "@/lib/I18nContext";
-
-const FEEDBACK_MAILTO =
-  "mailto:i.dimitrijevic96@gmail.com?subject=LS%20Tracker%20feedback";
+import { FeedbackButton } from "@/components/FeedbackButton";
 
 export function Footer() {
   const { t, locale } = useI18n();
@@ -21,12 +19,9 @@ export function Footer() {
             {locale === "nl" ? "Voorwaarden" : "Terms"}
           </Link>
         </nav>
-        <a
-          href={FEEDBACK_MAILTO}
-          className="order-1 inline-flex items-center gap-1 rounded-full border border-ink-200 px-3 py-1 font-semibold text-ink-600 hover:bg-ink-100 hover:text-ink-900 sm:order-3 dark:border-ink-700 dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-white"
-        >
-          💬 {t("footer.feedback")}
-        </a>
+        <div className="order-1 sm:order-3">
+          <FeedbackButton variant="footer" />
+        </div>
       </div>
     </footer>
   );

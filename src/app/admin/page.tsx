@@ -30,6 +30,7 @@ export default async function AdminDashboardPage() {
     inviteCount,
     consumedInviteCount,
     recentUsers,
+    openFeedbackCount,
     recentBets,
     topByWinRate,
   ] = await Promise.all([
@@ -54,6 +55,7 @@ export default async function AdminDashboardPage() {
       take: 5,
       select: { id: true, username: true, displayName: true, joinedAt: true, role: true },
     }),
+    prisma.feedback.count({ where: { status: "open" } }),
     prisma.bet.findMany({
       orderBy: { placedAt: "desc" },
       take: 5,
@@ -132,6 +134,17 @@ export default async function AdminDashboardPage() {
             className="rounded-full border border-ink-200 bg-white px-4 py-2 font-semibold text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200 dark:hover:bg-ink-700"
           >
             🔗 Magic-link
+          </Link>
+          <Link
+            href="/admin/feedback"
+            className="rounded-full border border-ink-200 bg-white px-4 py-2 font-semibold text-ink-700 hover:bg-ink-50 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-200 dark:hover:bg-ink-700"
+          >
+            💬 Feedback
+            {openFeedbackCount > 0 && (
+              <span className="ml-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-amber-500 px-1 text-xs text-white">
+                {openFeedbackCount}
+              </span>
+            )}
           </Link>
         </nav>
       </div>
