@@ -46,8 +46,8 @@ export function ProfileClient({
     [filteredBets],
   );
 
-  // Cumulative "wins minus losses" walk over time.
-  const series = useMemo(() => {
+  // Cumulative "wins minus losses" walk over time + rolling 5-bet win-rate.
+  const { series, winRateSeries } = useMemo(() => {
     const settled = filteredBets
       .filter((b) => b.status === "won" || b.status === "lost")
       .slice()
@@ -57,10 +57,22 @@ export function ProfileClient({
           new Date(b.resolvedAt ?? b.kickoff).getTime(),
       );
     let acc = 0;
-    return settled.map((b) => {
+    const series: number[] = [];
+    const wins: number[] = []; // 1 for win, 0 for loss
+    for (const b of settled) {
       acc += b.status === "won" ? 1 : -1;
-      return acc;
+      series.push(acc);
+      wins.push(b.status === "won" ? 1 : 0);
+    }
+    // Rolling 5-bet window win-rate. For early bets we use whatever's
+    // available so the chart starts at bet 1, not bet 5.
+    const WINDOW = 5;
+    const winRateSeries = wins.map((_, i) => {
+      const start = Math.max(0, i - WINDOW + 1);
+      const slice = wins.slice(start, i + 1);
+      return slice.reduce((a, v) => a + v, 0) / slice.length;
     });
+    return { series, winRateSeries };
   }, [filteredBets]);
 
   return (
@@ -163,25 +175,46 @@ export function ProfileClient({
         <StatCard label={locale === "nl" ? "Afgerond" : "Settled"} value={stats.settledBets} />
       </section>
 
-      {/* Cumulative W-L chart */}
+      {/* Charts: cumulative net + rolling win-rate (side-by-side on desktop) */}
       {series.length > 1 && (
-        <section className="rounded-2xl border border-ink-200 bg-white p-5 shadow-sm dark:border-ink-800 dark:bg-ink-900">
-          <div className="mb-3 flex items-end justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-ink-600 dark:text-ink-300">
-                {locale === "nl" ? "Winst minus verlies (in bets)" : "Wins minus losses (bet count)"}
-                {category !== "all" && ` · ${t(`category.${category}` as const)}`}
-              </h2>
-              <div className="text-2xl font-black text-ink-900 dark:text-white">
-                {series[series.length - 1] >= 0 ? "+" : ""}
-                {series[series.length - 1]}
+        <section className="grid gap-4 md:grid-cols-2">
+          {/* Cumulative net wins */}
+          <div className="rounded-2xl border border-ink-200 bg-white p-5 shadow-sm dark:border-ink-800 dark:bg-ink-900">
+            <div className="mb-3 flex items-end justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-ink-600 dark:text-ink-300">
+                  {locale === "nl" ? "Winst minus verlies" : "Wins minus losses"}
+                  {category !== "all" && ` · ${t(`category.${category}` as const)}`}
+                </h2>
+                <div className="text-2xl font-black text-ink-900 dark:text-white">
+                  {series[series.length - 1] >= 0 ? "+" : ""}
+                  {series[series.length - 1]}
+                </div>
+              </div>
+              <div className="text-xs text-ink-400 dark:text-ink-500">
+                {stats.settledBets} {locale === "nl" ? "bets" : "bets"}
               </div>
             </div>
-            <div className="text-xs text-ink-400 dark:text-ink-500">
-              {stats.settledBets} {locale === "nl" ? "bets" : "bets"}
-            </div>
+            <Sparkline values={series} />
           </div>
-          <Sparkline values={series} />
+
+          {/* Rolling 5-bet win-rate */}
+          <div className="rounded-2xl border border-ink-200 bg-white p-5 shadow-sm dark:border-ink-800 dark:bg-ink-900">
+            <div className="mb-3 flex items-end justify-between">
+              <div>
+                <h2 className="text-sm font-semibold text-ink-600 dark:text-ink-300">
+                  {locale === "nl" ? "Win-rate (5-bet venster)" : "Win-rate (5-bet window)"}
+                </h2>
+                <div className="text-2xl font-black text-ink-900 dark:text-white">
+                  {formatPercent(winRateSeries[winRateSeries.length - 1] ?? 0, locale)}
+                </div>
+              </div>
+              <div className="text-xs text-ink-400 dark:text-ink-500">
+                {locale === "nl" ? "huidige vorm" : "current form"}
+              </div>
+            </div>
+            <WinRateSparkline values={winRateSeries} />
+          </div>
         </section>
       )}
 
@@ -216,6 +249,43 @@ export function ProfileClient({
         )}
       </section>
     </div>
+  );
+}
+
+function WinRateSparkline({ values }: { values: number[] }) {
+  if (values.length < 2) return null;
+  const w = 600;
+  const h = 80;
+  const stepX = w / (values.length - 1);
+  // Always render on 0..1 scale so 50% is consistently the mid-line.
+  const path = values
+    .map((v, i) => {
+      const x = i * stepX;
+      const y = h - v * h;
+      return `${i === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
+    })
+    .join(" ");
+  const lastVal = values[values.length - 1];
+  const stroke = lastVal >= 0.5 ? "#10b981" : "#e11d48";
+  const fill = lastVal >= 0.5 ? "rgba(16,185,129,0.12)" : "rgba(225,29,72,0.12)";
+  const midY = h / 2;
+  const areaPath = `${path} L ${w} ${h} L 0 ${h} Z`;
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="h-20 w-full">
+      {/* 50% baseline */}
+      <line
+        x1={0}
+        y1={midY}
+        x2={w}
+        y2={midY}
+        stroke="currentColor"
+        strokeOpacity="0.18"
+        strokeDasharray="4 4"
+      />
+      <path d={areaPath} fill={fill} />
+      <path d={path} fill="none" stroke={stroke} strokeWidth="2" strokeLinejoin="round" />
+    </svg>
   );
 }
 
