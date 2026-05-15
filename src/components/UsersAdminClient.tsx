@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { Avatar } from "@/components/Avatar";
 import { RoleBadge, avatarRingClass } from "@/components/RoleBadge";
 import { updateUserRole } from "@/app/actions/updateUserRole";
+import { resetUserPassword } from "@/app/actions/resetUserPassword";
 import type { UserRole } from "@/lib/types";
 
 type Row = {
@@ -37,6 +38,35 @@ function UserRow({ user, isSelf }: { user: Row; isSelf: boolean }) {
   const [role, setRole] = useState<UserRole>(user.role);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [resetUrl, setResetUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  function handleReset() {
+    if (!confirm(`Reset wachtwoord voor ${user.displayName}? Bestaande sessies worden uitgelogd.`)) return;
+    setError(null);
+    setResetUrl(null);
+    startTransition(async () => {
+      const r = await resetUserPassword({ userId: user.id });
+      if (!r.ok) {
+        setError(
+          r.error === "user_not_found" ? "Geen geldig e-mailadres bij deze user." :
+          r.error === "rate_limited" ? "Te veel resets — wacht even." :
+          "Reset mislukt.",
+        );
+        return;
+      }
+      setResetUrl(r.url);
+    });
+  }
+
+  async function copyResetUrl() {
+    if (!resetUrl) return;
+    try {
+      await navigator.clipboard.writeText(resetUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* ignore */ }
+  }
 
   function change(next: UserRole) {
     if (next === role) return;
@@ -118,6 +148,31 @@ function UserRow({ user, isSelf }: { user: Row; isSelf: boolean }) {
       {error && (
         <p className="w-full text-xs text-rose-600 dark:text-rose-400">{error}</p>
       )}
+
+      <div className="w-full flex flex-wrap items-center gap-2 border-t border-ink-100 dark:border-ink-800 pt-2 mt-1">
+        <button
+          type="button"
+          disabled={pending}
+          onClick={handleReset}
+          className="rounded-full bg-amber-100 dark:bg-amber-900/60 px-3 py-1 text-[11px] font-semibold text-amber-900 dark:text-amber-100 hover:bg-amber-200 dark:hover:bg-amber-800 disabled:opacity-50"
+        >
+          🔑 Reset wachtwoord
+        </button>
+        {resetUrl && (
+          <>
+            <code className="break-all text-[11px] text-emerald-700 dark:text-emerald-300">
+              {resetUrl}
+            </code>
+            <button
+              type="button"
+              onClick={copyResetUrl}
+              className="rounded-full bg-emerald-600 px-3 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700"
+            >
+              {copied ? "✓" : "📋"} Kopieer
+            </button>
+          </>
+        )}
+      </div>
     </li>
   );
 }

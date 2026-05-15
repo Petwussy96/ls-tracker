@@ -235,6 +235,11 @@ export function LoginForm({ next }: { next?: string }) {
           {locale === "nl" ? "Aanmelden met uitnodigingscode" : "Join with invite code"}
         </Link>
       </p>
+      <p className="mt-2 text-center text-xs text-ink-400 dark:text-ink-500">
+        <Link href="/forgot-password" className="hover:underline">
+          {locale === "nl" ? "Wachtwoord vergeten?" : "Forgot password?"}
+        </Link>
+      </p>
     </div>
   );
 }
