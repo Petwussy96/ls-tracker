@@ -17,6 +17,7 @@
 import { createHash, randomBytes } from "crypto";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { rateLimit, sweepExpiredBuckets } from "@/lib/rateLimit";
 
 const TOKEN_LIFETIME_HOURS = 24;
 
@@ -36,10 +37,14 @@ export type GenerateMagicLinkResult =
 export async function generateAdminMagicLink(input: {
   email: string;
 }): Promise<GenerateMagicLinkResult> {
+  sweepExpiredBuckets();
   const session = await auth();
   if (session?.user?.role !== "admin") {
     return { ok: false, error: "not_admin" };
   }
+  // Magic-links are sensitive — cap at 20/hr per admin to prevent abuse
+  const rl = rateLimit(`magic:${session.user.id}`, 20, 60 * 60 * 1000);
+  if (!rl.allowed) return { ok: false, error: "server_error" };
 
   const email = input.email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {

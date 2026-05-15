@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
+import { rateLimit, sweepExpiredBuckets } from "@/lib/rateLimit";
 
 export type UpdateRoleResult =
   | { ok: true }
@@ -18,8 +19,12 @@ export async function updateUserRole(input: {
   userId: string;
   role: Role;
 }): Promise<UpdateRoleResult> {
+  sweepExpiredBuckets();
   const session = await auth();
   if (session?.user?.role !== "admin") return { ok: false, error: "not_admin" };
+  // Prevent mass-role-change abuse — 30 ops/hr per admin
+  const rl = rateLimit(`role:${session.user.id}`, 30, 60 * 60 * 1000);
+  if (!rl.allowed) return { ok: false, error: "not_admin" };
 
   if (!(VALID_ROLES as readonly string[]).includes(input.role)) {
     return { ok: false, error: "invalid_role" };
