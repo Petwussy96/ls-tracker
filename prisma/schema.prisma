@@ -23,7 +23,8 @@ model User {
   emailVerified DateTime?
   image         String?
   avatar        String? // legacy field, mirrors `image` — we'll consolidate later
-  role          String    @default("member") // "member" | "admin"
+  passwordHash  String? // scrypt hash; null = existing account that hasn't set one yet
+  role          String    @default("member") // "member" | "moderator" | "admin"
   joinedAt      DateTime  @default(now())
 
   accounts        Account[]

@@ -2,8 +2,8 @@
 
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
-import { signIn } from "@/auth";
 import { rateLimit, sweepExpiredBuckets } from "@/lib/rateLimit";
+import { createUserSession, hashPassword, isStrongEnough } from "@/lib/password";
 
 // We don't have request bodies in server actions, but we can read headers.
 // Vercel sets x-forwarded-for; fall back to a UA hash for local/dev.
@@ -50,6 +50,7 @@ export type SignupInput = {
   email: string;
   username: string;
   displayName: string;
+  password: string;
 };
 
 export type SignupResult =
@@ -65,6 +66,7 @@ export type SignupResult =
         | "invalid_username"
         | "username_taken"
         | "invalid_displayname"
+        | "weak_password"
         | "send_failed"
         | "rate_limited";
     };
@@ -92,9 +94,13 @@ export async function signupWithInvite(input: SignupInput): Promise<SignupResult
   if (displayName.length < 2 || displayName.length > 40) {
     return { ok: false, error: "invalid_displayname" };
   }
+  if (!isStrongEnough(input.password)) {
+    return { ok: false, error: "weak_password" };
+  }
 
-  // Re-validate code under a transaction to avoid TOCTOU races.
+  let newUserId: string | null = null;
   try {
+    const passwordHash = await hashPassword(input.password);
     await prisma.$transaction(async (tx) => {
       const invite = await tx.inviteCode.findUnique({ where: { code } });
       if (!invite) throw new Error("invalid_code");
@@ -112,9 +118,11 @@ export async function signupWithInvite(input: SignupInput): Promise<SignupResult
           email,
           username,
           displayName,
+          passwordHash,
           role: "member",
         },
       });
+      newUserId = user.id;
 
       await tx.inviteCode.update({
         where: { code },
@@ -137,11 +145,12 @@ export async function signupWithInvite(input: SignupInput): Promise<SignupResult
     return { ok: false, error: "send_failed" };
   }
 
-  // Send the magic link (the user now exists, so signIn's callback will allow it)
+  // Auto-login the brand-new user
+  if (!newUserId) return { ok: false, error: "send_failed" };
   try {
-    await signIn("resend", { email, redirect: false });
+    await createUserSession(newUserId);
   } catch (err) {
-    console.error("signIn failed", err);
+    console.error("createUserSession failed", err);
     return { ok: false, error: "send_failed" };
   }
 

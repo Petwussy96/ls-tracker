@@ -3,17 +3,23 @@
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { useI18n } from "@/lib/I18nContext";
+import { useRouter } from "next/navigation";
 import { signupWithInvite, validateInviteCode } from "@/app/join/actions";
+
+const MIN_PASSWORD_LEN = 8;
 
 type Step = "code" | "details" | "done";
 
 export function JoinForm({ prefillCode }: { prefillCode: string }) {
   const { locale } = useI18n();
+  const router = useRouter();
   const [step, setStep] = useState<Step>("code");
   const [code, setCode] = useState(prefillCode.toUpperCase());
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -47,10 +53,25 @@ export function JoinForm({ prefillCode }: { prefillCode: string }) {
   function handleDetailsSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (password.length < MIN_PASSWORD_LEN) {
+      setError(
+        locale === "nl"
+          ? `Wachtwoord moet minimaal ${MIN_PASSWORD_LEN} tekens zijn.`
+          : `Password must be at least ${MIN_PASSWORD_LEN} characters.`,
+      );
+      return;
+    }
+    if (password !== confirm) {
+      setError(locale === "nl" ? "Wachtwoorden komen niet overeen." : "Passwords don't match.");
+      return;
+    }
     startTransition(async () => {
-      const result = await signupWithInvite({ code, email, username, displayName });
+      const result = await signupWithInvite({ code, email, username, displayName, password });
       if (result.ok) {
         setStep("done");
+        // auto-login: server set the cookie, just navigate
+        router.push("/");
+        router.refresh();
         return;
       }
       setError(signupErrorMessage(result.error, locale));
@@ -64,15 +85,10 @@ export function JoinForm({ prefillCode }: { prefillCode: string }) {
         <h1 className="mt-4 text-2xl font-black">
           {locale === "nl" ? "Account aangemaakt!" : "Account created!"}
         </h1>
-        <p className="mt-2 text-ink-600">
+        <p className="mt-2 text-ink-600 dark:text-ink-300">
           {locale === "nl"
-            ? `We hebben een inlog-link gestuurd naar ${email}. Klik op de link om in te loggen.`
-            : `We sent a sign-in link to ${email}. Click it to sign in.`}
-        </p>
-        <p className="mt-6 text-xs text-ink-400">
-          {locale === "nl"
-            ? "Niets ontvangen? Check je spam-folder."
-            : "Didn't get it? Check your spam folder."}
+            ? "Je bent ingelogd. Veel succes!"
+            : "You're signed in. Good luck!"}
         </p>
       </div>
     );
@@ -196,6 +212,34 @@ export function JoinForm({ prefillCode }: { prefillCode: string }) {
             />
           </Field>
 
+          <Field
+            label={locale === "nl" ? "Kies een wachtwoord" : "Choose a password"}
+            hint={locale === "nl" ? `Minimaal ${MIN_PASSWORD_LEN} tekens` : `At least ${MIN_PASSWORD_LEN} characters`}
+            required
+          >
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              minLength={MIN_PASSWORD_LEN}
+              className="input"
+              autoComplete="new-password"
+            />
+          </Field>
+
+          <Field label={locale === "nl" ? "Bevestig wachtwoord" : "Confirm password"} required>
+            <input
+              type="password"
+              required
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              minLength={MIN_PASSWORD_LEN}
+              className="input"
+              autoComplete="new-password"
+            />
+          </Field>
+
           {error && (
             <div className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
           )}
@@ -258,6 +302,7 @@ function signupErrorMessage(error: string, locale: "nl" | "en"): string {
         invalid_username: "Gebruikersnaam moet 3-20 tekens zijn (letters, cijfers, underscore).",
         username_taken: "Deze gebruikersnaam is al bezet.",
         invalid_displayname: "Naam moet tussen 2 en 40 tekens zijn.",
+        weak_password: "Wachtwoord te kort (min. 8 tekens).",
         send_failed: "Iets ging mis. Probeer het opnieuw.",
         rate_limited: "Te veel pogingen vanaf jouw IP. Wacht een uur.",
       }[error] ?? "Er ging iets mis."
@@ -273,6 +318,7 @@ function signupErrorMessage(error: string, locale: "nl" | "en"): string {
       invalid_username: "Username must be 3-20 chars (letters, digits, underscore).",
       username_taken: "This username is taken.",
       invalid_displayname: "Display name must be 2-40 chars.",
+      weak_password: "Password too short (min. 8 characters).",
       send_failed: "Something went wrong. Try again.",
       rate_limited: "Too many attempts from your IP. Wait an hour.",
     }[error] ?? "Something went wrong."
