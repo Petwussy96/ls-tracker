@@ -666,13 +666,25 @@ function ScreenshotDropzone({
             />
           )}
           <div className="flex-1">
-            <div className="text-sm font-semibold text-rose-800">{t(status.messageKey)}</div>
-            <button
-              onClick={onReset}
-              className="mt-2 rounded-full bg-rose-700 px-3 py-1 text-xs font-semibold text-white hover:bg-rose-800"
-            >
-              {t("submit.uploadAnother")}
-            </button>
+            <div className="text-sm font-semibold text-rose-800 dark:text-rose-200">{t(status.messageKey)}</div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                onClick={onReset}
+                className="rounded-full bg-rose-700 px-3 py-1 text-xs font-semibold text-white hover:bg-rose-800"
+              >
+                {t("submit.uploadAnother")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== "undefined") window.location.reload();
+                }}
+                className="rounded-full border border-rose-300 bg-white px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-50 dark:border-rose-700 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-900/40"
+                title="Hard refresh — forceer pagina herladen"
+              >
+                🔄 Vernieuw pagina
+              </button>
+            </div>
           </div>
         </div>
       </div>

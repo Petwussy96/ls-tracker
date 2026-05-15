@@ -158,7 +158,7 @@ export function InvitesAdminClient({ invites }: { invites: Invite[] }) {
               </button>
               <button
                 onClick={() => copyText(lastCreated, `code:${lastCreated}`)}
-                className="rounded-full border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-ink-900 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900"
+                className="rounded-full border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-emerald-950/60 px-3 py-1.5 text-xs font-semibold text-emerald-900 dark:text-emerald-100 hover:bg-emerald-100 dark:hover:bg-emerald-900"
               >
                 {copiedLabel === `code:${lastCreated}` ? "✓" : ""} {locale === "nl" ? "Alleen code" : "Code only"}
               </button>
@@ -166,7 +166,7 @@ export function InvitesAdminClient({ invites }: { invites: Invite[] }) {
                 href={whatsappHref(lastCreated)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-full border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-ink-900 px-3 py-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900"
+                className="rounded-full border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-emerald-950/60 px-3 py-1.5 text-xs font-semibold text-emerald-900 dark:text-emerald-100 hover:bg-emerald-100 dark:hover:bg-emerald-900"
               >
                 💬 WhatsApp
               </a>
@@ -217,7 +217,7 @@ export function InvitesAdminClient({ invites }: { invites: Invite[] }) {
                       <div className="inline-flex flex-wrap gap-1">
                         <button
                           onClick={() => copyText(inviteLink(inv.code), `link:${inv.code}`)}
-                          className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200"
+                          className="rounded-full bg-emerald-100 dark:bg-emerald-900/60 px-3 py-1 text-xs font-semibold text-emerald-900 dark:text-emerald-100 hover:bg-emerald-200 dark:hover:bg-emerald-800"
                           title={inviteLink(inv.code)}
                         >
                           {copiedLabel === `link:${inv.code}` ? "✓" : "📋"} {locale === "nl" ? "Kopieer link" : "Copy link"}
@@ -226,13 +226,13 @@ export function InvitesAdminClient({ invites }: { invites: Invite[] }) {
                           href={whatsappHref(inv.code)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="rounded-full bg-ink-100 dark:bg-ink-800 px-3 py-1 text-xs font-semibold text-ink-700 dark:text-ink-200 hover:bg-ink-200"
+                          className="rounded-full bg-ink-100 dark:bg-ink-800 px-3 py-1 text-xs font-semibold text-ink-700 dark:text-ink-100 hover:bg-ink-200 dark:hover:bg-ink-700"
                         >
                           💬
                         </a>
                         <button
                           onClick={() => handleRevoke(inv.id)}
-                          className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 dark:text-rose-200 hover:bg-rose-200"
+                          className="rounded-full bg-rose-100 dark:bg-rose-900/60 px-3 py-1 text-xs font-semibold text-rose-900 dark:text-rose-100 hover:bg-rose-200 dark:hover:bg-rose-800"
                         >
                           {locale === "nl" ? "Intrekken" : "Revoke"}
                         </button>
