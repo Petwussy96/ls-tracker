@@ -6,7 +6,9 @@ import { ThemeProvider } from "@/lib/ThemeContext";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CookieBanner } from "@/components/CookieBanner";
+import { PasswordSetupModal } from "@/components/PasswordSetupModal";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "LS Tracker — Lucky Sucker community",
@@ -44,6 +46,18 @@ export default async function RootLayout({
       }
     : null;
 
+  // Existing-account password-gate: legacy users whose row has no
+  // passwordHash yet are forced through PasswordSetupModal before they can
+  // use the app. One small query per logged-in pageview — cheap.
+  let needsPasswordSetup = false;
+  if (sessionUser) {
+    const u = await prisma.user.findUnique({
+      where: { id: sessionUser.id },
+      select: { passwordHash: true },
+    });
+    needsPasswordSetup = !u?.passwordHash;
+  }
+
   return (
     <html lang="nl" suppressHydrationWarning>
       <head>
@@ -58,6 +72,9 @@ export default async function RootLayout({
             </main>
             <Footer />
             <CookieBanner />
+            {needsPasswordSetup && sessionUser && (
+              <PasswordSetupModal displayName={sessionUser.displayName} />
+            )}
           </I18nProvider>
         </ThemeProvider>
         <Analytics />
