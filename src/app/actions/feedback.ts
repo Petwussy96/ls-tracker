@@ -119,7 +119,8 @@ export async function updateFeedbackStatus(input: {
   status: "open" | "addressed" | "wontfix";
 }): Promise<{ ok: boolean }> {
   const session = await auth();
-  const role = session?.user?.role;
+  if (!session?.user?.id) return { ok: false };
+  const role = session.user.role;
   if (role !== "admin" && role !== "moderator") return { ok: false };
 
   try {
