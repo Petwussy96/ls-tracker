@@ -37,9 +37,6 @@ export function BetCard({
   const visibleSelections =
     isLongAcca && !expanded ? bet.selections.slice(0, COLLAPSED_PREVIEW) : bet.selections;
   const hiddenCount = bet.selections.length - visibleSelections.length;
-  // Per-leg odds were geometrically distributed (Unibet-style slip with only
-  // a combined total) when all legs share the same odds within tolerance.
-  // In that case we hide per-leg odds — they're not real values.
   const oddsAreDistributed =
     bet.selections.length > 1 &&
     bet.selections.every((s) => Math.abs(s.odds - bet.selections[0].odds) < 0.01);
@@ -85,7 +82,7 @@ export function BetCard({
           )}
           <div className="text-sm font-semibold text-ink-900 dark:text-white">
             {isAcca
-              ? `${bet.selections.length}× ${t("betType.accumulator")}`
+              ? `${bet.selections.length}x ${t("betType.accumulator")}`
               : bet.selections[0]?.match}
           </div>
         </div>
@@ -174,6 +171,8 @@ export function BetCard({
       {!isOwner && !!currentUserId && bet.status !== "open" && (
         <ReportButton betId={bet.id} />
       )}
+
+      {!!currentUserId && <ShareBetButton betId={bet.id} />}
     </div>
   );
 }
