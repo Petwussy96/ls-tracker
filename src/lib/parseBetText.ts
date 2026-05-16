@@ -88,6 +88,8 @@ const SUMMARY_PATTERNS = [
   // Unibet accumulator headers ("Vijfvoudig • 0 van 5 afgehandeld").
   // No trailing \b — Tesseract often hallucinates an extra "e" (Vijfvoudige).
   /^(?:enkelvoudig|drievoudig|viervoudig|vijfvoudig|zesvoudig|zevenvoudig|achtvoudig|negenvoudig|tienvoudig)/i,
+  /^\s*\d+[-‐–—]?voud\b/i,                       // bet365 "5-voud + 10% 18.14" combined-odds row
+  /\+\s*\d+\s*%/,                                 // "+10%" combi-boost label often on combined-odds row
   /coupon[-\s]?id/i,
   // Toto paper receipt
   /speeldatum/i,
@@ -247,6 +249,9 @@ function stripLeadingNoise(text: string): string {
   // 2+ letters with no space ("FC Bayern"), so a single capital + space
   // + capital can be safely stripped as an OCR-hallucinated icon.
   s = s.replace(/^[A-Z](?=\s[A-Z])\s+/, "");
+  // Double-x delete-icon ("xX Ja", "Xx Augsburg") — OCR sometimes reads
+  // the close-X icon as two characters. Strip when followed by uppercase.
+  s = s.replace(/^[xX]{2}\s+(?=[A-Z])/, "");
   return s.trim();
 }
 
@@ -429,6 +434,7 @@ function gatherDescription(allLines: Line[], from: number, to: number | undefine
 function cleanDescriptionPart(text: string): string {
   return text
     .replace(/\[\s*[Vv][Uu]\s*\]/g, "")              // [VU] / [Vu] badges
+    .replace(/(?:^|\s)[Vv][Uu](?=\s|$)/g, "")          // standalone " VU" / " vu" tokens
     .replace(/\s+m{1,3}(?=\s|$)/gi, "")               // stray "mm" OCR noise
     .replace(/[\s\-–—_+|]+$/g, "")                    // trailing punctuation
     .replace(/^[\s\-–—_+|]+/g, "")                    // leading punctuation
