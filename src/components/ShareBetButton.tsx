@@ -12,8 +12,12 @@ export function ShareBetButton({ betId }: { betId: string }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Always normalize to the canonical origin — strip any 'www.' prefix the
+  // user may have ended up on (DuckDNS doesn't support www subdomains).
   const url =
-    typeof window !== "undefined" ? `${window.location.origin}/bet/${betId}` : "";
+    typeof window !== "undefined"
+      ? `${window.location.origin.replace("//www.", "//")}/bet/${betId}`
+      : "";
 
   const shareTitle =
     locale === "nl" ? "Mijn bet op LS Tracker" : "My bet on LS Tracker";

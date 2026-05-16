@@ -15,13 +15,37 @@ import type { Bet, BetType, UserRole } from "@/lib/types";
 export const revalidate = 60;
 
 async function getBet(id: string) {
-  return prisma.bet.findUnique({
-    where: { id },
-    include: {
-      user: { select: { id: true, username: true, displayName: true, image: true, avatar: true, role: true, joinedAt: true } },
-      selections: { orderBy: { position: "asc" } },
-    },
-  });
+  try {
+    return await prisma.bet.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            image: true,
+            avatar: true,
+            role: true,
+            joinedAt: true,
+          },
+        },
+        selections: { orderBy: { position: "asc" } },
+      },
+    });
+  } catch (err) {
+    console.error("bet detail getBet failed", err);
+    return null;
+  }
+}
+
+async function safeAuth() {
+  try {
+    return await auth();
+  } catch (err) {
+    console.error("bet detail auth failed", err);
+    return null;
+  }
 }
 
 export async function generateMetadata({
@@ -37,11 +61,9 @@ export async function generateMetadata({
     ? `${row.selections[0].match} — ${row.selections[0].selection}`
     : "";
   const title = isAcca
-    ? `${row.user.displayName}'s ${row.selections.length}× combi @ ${row.combinedOdds.toFixed(2)}`
+    ? `${row.user.displayName}'s ${row.selections.length}x combi @ ${row.combinedOdds.toFixed(2)}`
     : `${row.user.displayName}: ${legPreview}`;
-  const desc = `LS Tracker — ${row.user.displayName} · status: ${row.status}${
-    row.selections.length > 1 ? ` · ${row.selections.length} benen` : ""
-  } · totaal quotering ${row.combinedOdds.toFixed(2)}`;
+  const desc = `LS Tracker — ${row.user.displayName} · status: ${row.status} · totaal quotering ${row.combinedOdds.toFixed(2)}`;
 
   return {
     title,
@@ -59,7 +81,7 @@ export default async function BetDetailPage({
   const row = await getBet(params.id);
   if (!row) notFound();
 
-  const session = await auth();
+  const session = await safeAuth();
 
   const bet: Bet = {
     id: row.id,
@@ -86,8 +108,8 @@ export default async function BetDetailPage({
     displayName: row.user.displayName,
     image: row.user.image ?? undefined,
     avatar: row.user.avatar ?? undefined,
-    role: row.user.role as UserRole,
-    joinedAt: row.user.joinedAt.toISOString(),
+    role: (row.user.role as UserRole) ?? "member",
+    joinedAt: row.user.joinedAt?.toISOString() ?? new Date().toISOString(),
   };
 
   return (
