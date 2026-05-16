@@ -62,6 +62,7 @@ const SELECTION_HINTS = [
   /dubbele\s*kans/i, // Unibet "Dubbele Kans" (double chance)
   /geeft\s*een\s*assist/i, // Unibet "Scoort of Geeft Een Assist"
   /reguliere\s*speeltijd/i, // Unibet 1X2 winner — "Reguliere Speeltijd: Salford City FC"
+  /schoten\s*(?:van|op)/i, // Unibet "Schoten van speler op doel" / "Schoten op doel"
 ];
 
 // Lines that are summary / metadata / headers, NEVER selections.
@@ -172,7 +173,7 @@ function classifyLine(raw: string): Line {
     }
   }
 
-  const hasMatch = MATCH_RE.test(text);
+  const hasMatch = Boolean(extractMatchFromLine(text));
   const hasSelection = SELECTION_HINTS.some((re) => re.test(text));
   const isSummary = SUMMARY_PATTERNS.some((re) => re.test(text));
 
@@ -186,11 +187,19 @@ function classifyLine(raw: string): Line {
   return { raw: text, odds, hasMatch, hasSelection, isSummary, combinedOddsHint };
 }
 
+// Bet-type strings that masquerade as team names: "Meer dan 1.5",
+// "Over 2.5", "Minder dan 3.5", "Under 4.5", "Beide teams scoren", etc.
+// MATCH_RE can falsely match these as a fixture (e.g. "Patrik Schick -
+// Meer dan 1.5"), so we post-filter.
+const FAKE_TEAM_RE =
+  /^(?:meer\s*dan|minder\s*dan|over|under)\s*\d|^beide\s*teams|^ja$|^nee$|^yes$|^no$/i;
+
 function extractMatchFromLine(text: string): string | undefined {
   const m = text.match(MATCH_RE);
   if (!m) return undefined;
   const a = cleanTrailingTeamJunk(m[1].trim());
   const b = cleanTrailingTeamJunk(m[2].trim());
+  if (FAKE_TEAM_RE.test(a) || FAKE_TEAM_RE.test(b)) return undefined;
   return `${a} - ${b}`;
 }
 
