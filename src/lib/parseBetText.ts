@@ -610,6 +610,29 @@ export function parseBetText(rawText: string): ParsedBetText {
       let selectionText = line.raw.substring(0, oddsHit.pos);
       selectionText = selectionText.replace(/[\s@:•·\-—–○]+$/, "").trim();
 
+      // Wrap detection (BACKWARD — Unibet "Schoten van speler op doel
+      // (afgehandeld volgens Opta-\ngegevens):"): the visual label wraps such
+      // that the previous OCR line ends with a hyphen and the current odds
+      // line starts mid-word. Glue the previous line onto the front of
+      // selectionText (no space — hyphenation continues the word). Only
+      // when the previous line is itself a selection-hint line, to avoid
+      // false positives with Toto wrapped-match layouts.
+      if (i > 0 && !usedMatchIdx.has(i - 1)) {
+        const prev = allLines[i - 1];
+        if (
+          prev &&
+          !prev.isSummary &&
+          prev.odds.length === 0 &&
+          !prev.hasMatch &&
+          prev.hasSelection &&
+          /[-–—]\s*$/.test(prev.raw)
+        ) {
+          const prefix = prev.raw.trim();
+          selectionText = `${prefix}${selectionText}`.replace(/\s+/g, " ").trim();
+          usedMatchIdx.add(i - 1);
+        }
+      }
+
       // Wrap detection (bet365 Dubbele Kans / Draw Or): if the selection
       // ends with a connector word like "of" / "en" / "and" / "or", the
       // visual selection wrapped onto the next line. E.g.
