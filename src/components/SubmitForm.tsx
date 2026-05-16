@@ -416,7 +416,17 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
                 />
               </Field>
             ) : (
-              <Field label={t("submit.odds")} required>
+              <Field
+                label={t("submit.odds")}
+                hint={
+                  Number(sel.odds) === 0 || sel.odds === "0.00"
+                    ? locale === "nl"
+                      ? "⚠️ Niet gelezen — vul handmatig in"
+                      : "⚠️ Not read — fill in manually"
+                    : undefined
+                }
+                required
+              >
                 <input
                   type="number"
                   required
@@ -425,7 +435,11 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
                   value={sel.odds}
                   onChange={(e) => updateSelection(i, { odds: e.target.value })}
                   placeholder="1.83"
-                  className="input"
+                  className={`input ${
+                    Number(sel.odds) === 0 || sel.odds === "0.00"
+                      ? "ring-2 ring-amber-400 dark:ring-amber-600"
+                      : ""
+                  }`}
                 />
               </Field>
             )}

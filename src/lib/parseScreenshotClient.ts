@@ -15,6 +15,66 @@
 import { createWorker, type Worker } from "tesseract.js";
 import { parseBetText } from "./parseBetText";
 
+// Pre-process the image client-side before handing to Tesseract:
+//   1. Scale up so small text (selection names, odds) has more pixels
+//   2. Convert to grayscale
+//   3. Boost contrast — push light grays to white, dark grays to black
+// This dramatically improves OCR accuracy on bookie-app screenshots where
+// selection names are rendered in colored / low-contrast text.
+async function preprocessImage(file: File): Promise<Blob> {
+  if (typeof createImageBitmap === "undefined") return file;
+  try {
+    const img = await createImageBitmap(file);
+    // Target ~1800px on the long side — sweet spot for Tesseract speed/accuracy
+    const target = 1800;
+    const scale = Math.min(2.5, Math.max(1, target / Math.max(img.width, img.height)));
+    const w = Math.round(img.width * scale);
+    const h = Math.round(img.height * scale);
+
+    const canvas = typeof OffscreenCanvas !== "undefined"
+      ? new OffscreenCanvas(w, h)
+      : (() => {
+          const c = document.createElement("canvas");
+          c.width = w;
+          c.height = h;
+          return c;
+        })();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ctx = (canvas as any).getContext("2d") as CanvasRenderingContext2D | null;
+    if (!ctx) return file;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, 0, 0, w, h);
+
+    const data = ctx.getImageData(0, 0, w, h);
+    const d = data.data;
+    for (let i = 0; i < d.length; i += 4) {
+      // Luminance
+      const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      // Stretch midtones: push <90 to 0 and >180 to 255, linear interpolation between.
+      let v: number;
+      if (gray < 90) v = 0;
+      else if (gray > 180) v = 255;
+      else v = Math.round(((gray - 90) / 90) * 255);
+      d[i] = d[i + 1] = d[i + 2] = v;
+    }
+    ctx.putImageData(data, 0, 0);
+
+    if ("convertToBlob" in canvas) {
+      return await (canvas as OffscreenCanvas).convertToBlob({ type: "image/png" });
+    }
+    return await new Promise<Blob>((resolve, reject) => {
+      (canvas as HTMLCanvasElement).toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("toBlob failed"))),
+        "image/png",
+      );
+    });
+  } catch {
+    // If anything goes wrong, fall back to the original file
+    return file;
+  }
+}
+
 export type { ParsedSelection } from "./parseBetText";
 
 export type ParsedScreenshot = {
@@ -76,8 +136,9 @@ export async function parseBetscreenshotClient(
     // 90s hard timeout — if the OCR or language-pack download silently hangs
     // (e.g. CSP-blocked CDN, network blip), we'd rather surface an error
     // than leave the user staring at a spinner.
+    const preprocessed = await preprocessImage(file);
     const recognized = await Promise.race([
-      worker.recognize(file),
+      worker.recognize(preprocessed),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("ocr_timeout_90s")), 90_000),
       ),

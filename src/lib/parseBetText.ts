@@ -824,6 +824,46 @@ export function parseBetText(rawText: string): ParsedBetText {
     }
   }
 
+  // Phantom-leg pass (bet365 OCR omission): when Tesseract drops the
+  // "selection-name + odds" line on some legs but keeps the "bet-type"
+  // line and the match line, we still have enough to identify the leg —
+  // we just don't know the odds. Add them with odds=0 so the user is
+  // prompted to fill them in manually instead of losing those legs.
+  for (let i = 0; i < allLines.length; i++) {
+    if (usedMatchIdx.has(i)) continue;
+    const sel = allLines[i];
+    if (sel.isSummary) continue;
+    if (sel.odds.length > 0) continue;
+    if (!sel.hasSelection) continue;
+    // Look 1-3 lines ahead for an unused match line; don't cross into
+    // another leg's odds row.
+    for (let j = i + 1; j < allLines.length && j <= i + 3; j++) {
+      const next = allLines[j];
+      if (next.isSummary) continue;
+      if (next.odds.length > 0) break;
+      if (usedMatchIdx.has(j)) continue;
+      if (!next.hasMatch) {
+        if (looksLikeTeamName(next.raw)) continue;
+        continue;
+      }
+      const matchText = extractMatchFromLine(next.raw) ?? next.raw;
+      // Build a friendlier selection label: include the bet-type AND a hint
+      // that the user needs to pick the actual team. We don't know which
+      // team they picked (OCR dropped that info), but at least the bet-type
+      // is still informative.
+      const betType = sel.raw.trim();
+      const selectionLabel = `${betType} — (kies)`;
+      selections.push({
+        match: matchText,
+        selection: selectionLabel,
+        odds: 0, // placeholder — user fills in
+      });
+      usedMatchIdx.add(i);
+      usedMatchIdx.add(j);
+      break;
+    }
+  }
+
   // Accumulator detection
   let isAccumulator = false;
   let combinedOdds: number | undefined;
@@ -849,6 +889,10 @@ export function parseBetText(rawText: string): ParsedBetText {
   else if (goodMatches === total && goodSelections === total) confidence = "high";
   else if (goodMatches >= total - 1 && goodSelections >= total - 1) confidence = "medium";
   else confidence = "low";
+
+  // Force low confidence if any leg has placeholder odds (phantom-leg pass),
+  // so the form shows a warning to fill them in.
+  if (selections.some((s) => s.odds === 0)) confidence = "low";
 
   return {
     selections,
