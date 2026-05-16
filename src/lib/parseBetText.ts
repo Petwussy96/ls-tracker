@@ -115,6 +115,11 @@ const SUMMARY_PATTERNS = [
   /je\s*maakt\s*kans/i,
   /totale?\s*inleg/i,
   /€\s*\d/i, // any line with € followed by digits = currency, not a leg
+  // Date lines like "16 mei 2026, 12.00" — Unibet's per-leg "Open" row puts
+  // the kickoff time after the date with a "." as separator, which our
+  // ODDS_RE picks up as fake odds (12.00 → leg with odds 12). The 4-digit
+  // year anchor keeps real team names ("Sporting de Mai 1995") safe.
+  /\b\d{1,2}\s+(?:jan|feb|mrt|apr|mei|jun|jul|aug|sep|okt|nov|dec|january|february|march|april|may|june|july|august|september|october|november|december)\.?\s+\d{4}\b/i,
 ];
 
 // "Combined odds" hint patterns — when a line says "Totaal:/Combined/Odds X.XX",
