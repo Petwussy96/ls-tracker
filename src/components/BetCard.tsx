@@ -88,9 +88,6 @@ export function BetCard({
               ? `${bet.selections.length}× ${t("betType.accumulator")}`
               : bet.selections[0]?.match}
           </div>
-          {!isAcca && bet.selections[0]?.competition && (
-            <div className="text-xs text-ink-400 dark:text-ink-500">{bet.selections[0].competition}</div>
-          )}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
           <span

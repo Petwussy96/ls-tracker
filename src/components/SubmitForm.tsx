@@ -385,16 +385,6 @@ export function SubmitForm({ currentUser }: { currentUser: CurrentUser }) {
               />
             </Field>
 
-            <Field label={t("submit.competition")}>
-              <input
-                type="text"
-                value={sel.competition}
-                onChange={(e) => updateSelection(i, { competition: e.target.value })}
-                placeholder={t("submit.competitionPlaceholder")}
-                className="input"
-              />
-            </Field>
-
             <Field label={t("submit.selection")} required>
               <input
                 type="text"
