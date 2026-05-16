@@ -38,9 +38,11 @@ export default async function RootLayout({
 }) {
   // auth() can throw if the session cookie is malformed / the auth secret
   // changed / etc. — fall back to "guest" so the whole site doesn't crash.
-  let session: Awaited<ReturnType<typeof auth>> | null = null;
+  // `auth` is overloaded (middleware vs. no-arg session fetch), so we cast.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let session: any = null;
   try {
-    session = await auth();
+    session = await (auth as () => Promise<any>)();
   } catch (err) {
     console.error("[layout] auth() failed, treating as guest", err);
   }
