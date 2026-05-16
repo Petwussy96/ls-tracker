@@ -8,6 +8,7 @@ import type { Bet, User, UserRole } from "@/lib/types";
 import { formatDate, formatOdds, timeUntil } from "@/lib/format";
 import { ResolveButtons } from "@/components/ResolveButtons";
 import { ReportButton } from "@/components/ReportButton";
+import { ShareBetButton } from "@/components/ShareBetButton";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { computeBetCategory } from "@/lib/betCategory";
 import { Avatar } from "@/components/Avatar";
