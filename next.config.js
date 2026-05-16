@@ -18,7 +18,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://res.cloudinary.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://va.vercel-scripts.com https://unpkg.com https://cdn.jsdelivr.net https://res.cloudinary.com",
+  "connect-src 'self' https://va.vercel-scripts.com https://unpkg.com https://cdn.jsdelivr.net https://res.cloudinary.com https://tessdata.projectnaptha.com",
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",
   "form-action 'self'",

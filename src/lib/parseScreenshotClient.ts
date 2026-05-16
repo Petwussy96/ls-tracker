@@ -73,13 +73,21 @@ export async function parseBetscreenshotClient(
   let rawText = "";
   try {
     const worker = await getWorker(onProgress);
-    const { data } = await worker.recognize(file);
-    rawText = data.text ?? "";
+    // 90s hard timeout — if the OCR or language-pack download silently hangs
+    // (e.g. CSP-blocked CDN, network blip), we'd rather surface an error
+    // than leave the user staring at a spinner.
+    const recognized = await Promise.race([
+      worker.recognize(file),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("ocr_timeout_90s")), 90_000),
+      ),
+    ]);
+    rawText = recognized.data.text ?? "";
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     // eslint-disable-next-line no-console
     console.error("Tesseract OCR failed", err);
-    // Reset worker so the next call gets a fresh one
+    // Reset worker so the next call gets a fresh one (a hung worker is dead)
     cachedWorker = null;
     return { ok: false, error: "ocr_failed", detail };
   }
