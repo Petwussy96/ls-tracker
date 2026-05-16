@@ -29,6 +29,7 @@ export function SettingsClient({ user }: { user: UserData }) {
       <AvatarSection user={user} />
       <ProfileSection user={user} />
       {user.hasPassword && <PasswordSection />}
+      <TourReplaySection />
       <DangerSection isAdmin={user.role === "admin"} />
     </div>
   );
@@ -312,6 +313,34 @@ function DangerSection({ isAdmin }: { isAdmin: boolean }) {
           {pending ? "Verwijderen…" : "Verwijder mijn account"}
         </button>
       </div>
+    </section>
+  );
+}
+
+
+function TourReplaySection() {
+  function replay() {
+    try {
+      localStorage.removeItem("lucky-sucker-onboarded");
+    } catch {
+      // ignore
+    }
+    window.location.href = "/";
+  }
+  return (
+    <section className="rounded-2xl border border-ink-200 bg-white p-5 shadow-sm dark:border-ink-700 dark:bg-ink-900">
+      <h2 className="text-lg font-bold text-ink-900 dark:text-white">Tour</h2>
+      <p className="mt-1 text-sm text-ink-600 dark:text-ink-300">
+        De rondleiding nog eens zien? Klik hier — je gaat dan terug naar de
+        leaderboard waar de tour vanzelf opent.
+      </p>
+      <button
+        type="button"
+        onClick={replay}
+        className="mt-3 rounded-full border border-ink-200 bg-white px-4 py-1.5 text-sm font-semibold text-ink-800 hover:bg-ink-100 dark:border-ink-700 dark:bg-ink-800 dark:text-ink-100 dark:hover:bg-ink-700"
+      >
+        🔁 Bekijk de tour opnieuw
+      </button>
     </section>
   );
 }
