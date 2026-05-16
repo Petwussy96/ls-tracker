@@ -120,6 +120,11 @@ const SUMMARY_PATTERNS = [
   // ODDS_RE picks up as fake odds (12.00 → leg with odds 12). The 4-digit
   // year anchor keeps real team names ("Sporting de Mai 1995") safe.
   /\b\d{1,2}\s+(?:jan|feb|mrt|apr|mei|jun|jul|aug|sep|okt|nov|dec|january|february|march|april|may|june|july|august|september|october|november|december)\.?\s+\d{4}\b/i,
+  // Unibet competition / category line: "Voetbal / Zweden / Elitettan - Dames",
+  // "Voetbal / Italie / Serie A Vrouwen", etc. Some of these contain " - "
+  // which makes MATCH_RE incorrectly treat them as a fixture and steals
+  // the slot from the real team line below.
+  /^(?:voetbal|football|basketbal|basketball|tennis|ijshockey|ice\s*hockey|honkbal|baseball|american\s*football|rugby|handbal|handball|volleybal|volleyball)\s*[\/|]/i,
 ];
 
 // "Combined odds" hint patterns — when a line says "Totaal:/Combined/Odds X.XX",
@@ -201,11 +206,44 @@ const FAKE_TEAM_RE =
 
 function extractMatchFromLine(text: string): string | undefined {
   const m = text.match(MATCH_RE);
-  if (!m) return undefined;
-  const a = cleanTrailingTeamJunk(m[1].trim());
-  const b = cleanTrailingTeamJunk(m[2].trim());
-  if (FAKE_TEAM_RE.test(a) || FAKE_TEAM_RE.test(b)) return undefined;
-  return `${a} - ${b}`;
+  if (m) {
+    const a = cleanTrailingTeamJunk(m[1].trim());
+    const b = cleanTrailingTeamJunk(m[2].trim());
+    if (FAKE_TEAM_RE.test(a) || FAKE_TEAM_RE.test(b)) return undefined;
+    return `${a} - ${b}`;
+  }
+  // Fallback: OCR sometimes drops the " - " between two team names and
+  // leaves only a wide gap (Unibet "Umeå IK (D)  Sandvikens IF (W)" — the
+  // visual dash is rendered with very thin glyph and Tesseract eats it).
+  // Try splitting on 2+ consecutive spaces, but only when BOTH halves look
+  // like genuine team names (start with a letter, no selection hints, no
+  // summary tokens, no long digit runs).
+  const parts = text.split(/\s{2,}/);
+  if (parts.length === 2) {
+    const a = cleanTrailingTeamJunk(parts[0].trim());
+    const b = cleanTrailingTeamJunk(parts[1].trim());
+    if (
+      a.length >= 2 &&
+      b.length >= 2 &&
+      a.length <= 40 &&
+      b.length <= 40 &&
+      /^\p{L}/u.test(a) &&
+      /^\p{L}/u.test(b) &&
+      !FAKE_TEAM_RE.test(a) &&
+      !FAKE_TEAM_RE.test(b) &&
+      !SELECTION_HINTS.some((re) => re.test(a)) &&
+      !SELECTION_HINTS.some((re) => re.test(b)) &&
+      !NON_TEAM_WORDS_RE.test(a) &&
+      !NON_TEAM_WORDS_RE.test(b) &&
+      !/\d{3,}/.test(a) &&
+      !/\d{3,}/.test(b) &&
+      !/[€$:@]/.test(a) &&
+      !/[€$:@]/.test(b)
+    ) {
+      return `${a} - ${b}`;
+    }
+  }
+  return undefined;
 }
 
 /**
