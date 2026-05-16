@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Avatar } from "@/components/Avatar";
-import { RoleBadge, avatarRingClass } from "@/components/RoleBadge";
+import { RoleBadge } from "@/components/RoleBadge";
+import { avatarRingClass } from "@/lib/avatarRing";
 import { updateUserRole } from "@/app/actions/updateUserRole";
 import { resetUserPassword } from "@/app/actions/resetUserPassword";
 import type { UserRole } from "@/lib/types";

@@ -42,9 +42,3 @@ export function RoleBadge({
   );
 }
 
-/** Avatar ring colour helper — for use with Avatar's className prop. */
-export function avatarRingClass(role: UserRole | null | undefined): string {
-  if (role === "admin") return "ring-2 ring-amber-400 dark:ring-amber-500 shadow-sm";
-  if (role === "moderator") return "ring-2 ring-sky-400 dark:ring-sky-500 shadow-sm";
-  return "ring-halo";
-}

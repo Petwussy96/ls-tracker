@@ -7,6 +7,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CookieBanner } from "@/components/CookieBanner";
 import { PasswordSetupModal } from "@/components/PasswordSetupModal";
+import { OnboardingTour } from "@/components/OnboardingTour";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 
@@ -35,7 +36,14 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
+  // auth() can throw if the session cookie is malformed / the auth secret
+  // changed / etc. — fall back to "guest" so the whole site doesn't crash.
+  let session: Awaited<ReturnType<typeof auth>> | null = null;
+  try {
+    session = await auth();
+  } catch (err) {
+    console.error("[layout] auth() failed, treating as guest", err);
+  }
   const sessionUser = session?.user
     ? {
         id: session.user.id,
@@ -48,14 +56,20 @@ export default async function RootLayout({
 
   // Existing-account password-gate: legacy users whose row has no
   // passwordHash yet are forced through PasswordSetupModal before they can
-  // use the app. One small query per logged-in pageview — cheap.
+  // use the app. One small query per logged-in pageview — cheap. Defensive:
+  // a transient Prisma error here would otherwise blow up every page.
   let needsPasswordSetup = false;
   if (sessionUser) {
-    const u = await prisma.user.findUnique({
-      where: { id: sessionUser.id },
-      select: { passwordHash: true },
-    });
-    needsPasswordSetup = !u?.passwordHash;
+    try {
+      const u = await prisma.user.findUnique({
+        where: { id: sessionUser.id },
+        select: { passwordHash: true },
+      });
+      needsPasswordSetup = !u?.passwordHash;
+    } catch (err) {
+      console.error("[layout] password-gate query failed", err);
+      needsPasswordSetup = false;
+    }
   }
 
   return (
@@ -74,6 +88,9 @@ export default async function RootLayout({
             <CookieBanner />
             {needsPasswordSetup && sessionUser && (
               <PasswordSetupModal displayName={sessionUser.displayName} />
+            )}
+            {!needsPasswordSetup && sessionUser && (
+              <OnboardingTour enabled={true} />
             )}
           </I18nProvider>
         </ThemeProvider>

@@ -9,7 +9,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { betFingerprint } from "@/lib/betFingerprint";
 import { Avatar } from "@/components/Avatar";
-import { RoleBadge, avatarRingClass } from "@/components/RoleBadge";
+import { RoleBadge } from "@/components/RoleBadge";
+import { avatarRingClass } from "@/lib/avatarRing";
 
 export const dynamic = "force-dynamic";
 

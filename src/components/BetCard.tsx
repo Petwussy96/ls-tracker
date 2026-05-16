@@ -12,7 +12,8 @@ import { ShareBetButton } from "@/components/ShareBetButton";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { computeBetCategory } from "@/lib/betCategory";
 import { Avatar } from "@/components/Avatar";
-import { RoleBadge, avatarRingClass } from "@/components/RoleBadge";
+import { RoleBadge } from "@/components/RoleBadge";
+import { avatarRingClass } from "@/lib/avatarRing";
 
 // Long acca's get a collapsible body so a 12-leg combi doesn't take half the page.
 const LONG_ACCA_THRESHOLD = 6;

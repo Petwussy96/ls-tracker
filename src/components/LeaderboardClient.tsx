@@ -9,7 +9,8 @@ import type { Bet, User } from "@/lib/types";
 import { StatCard } from "@/components/StatCard";
 import { StreakBadge } from "@/components/StreakBadge";
 import { Avatar } from "@/components/Avatar";
-import { RoleBadge, avatarRingClass } from "@/components/RoleBadge";
+import { RoleBadge } from "@/components/RoleBadge";
+import { avatarRingClass } from "@/lib/avatarRing";
 import {
   CategoryFilterChips,
   applyCategoryFilter,
