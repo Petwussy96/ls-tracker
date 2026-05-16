@@ -6,6 +6,7 @@ import { computeUserStats } from "@/lib/stats";
 import { formatOdds, formatPercent } from "@/lib/format";
 import type { Bet, User, UserRole } from "@/lib/types";
 import { StatCard } from "@/components/StatCard";
+import { AchievementsSection } from "@/components/AchievementsSection";
 import { BetCard } from "@/components/BetCard";
 import { StreakBadge } from "@/components/StreakBadge";
 import { Avatar } from "@/components/Avatar";
@@ -174,6 +175,9 @@ export function ProfileClient({
         <StatCard label={locale === "nl" ? "Geannuleerd" : "Void"} value={stats.voids} />
         <StatCard label={locale === "nl" ? "Afgerond" : "Settled"} value={stats.settledBets} />
       </section>
+
+      {/* Achievements */}
+      <AchievementsSection bets={userBets} />
 
       {/* Charts: cumulative net + rolling win-rate (side-by-side on desktop) */}
       {series.length > 1 && (
