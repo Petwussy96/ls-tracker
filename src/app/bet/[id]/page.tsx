@@ -11,6 +11,7 @@ import { Avatar } from "@/components/Avatar";
 import { RoleBadge } from "@/components/RoleBadge";
 import { avatarRingClass } from "@/lib/avatarRing";
 import { ShareBetButton } from "@/components/ShareBetButton";
+import { DeleteBetButton } from "@/components/DeleteBetButton";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { computeBetCategory } from "@/lib/betCategory";
 import { formatOdds } from "@/lib/format";
@@ -203,6 +204,8 @@ export default async function BetDetailPage({
   const category = computeBetCategory(bet);
   const isOwner =
     Boolean(session?.user?.id) && session?.user?.id === bet.userId;
+  const canModerate =
+    session?.user?.role === "admin" || session?.user?.role === "moderator";
 
   const statusPill =
     bet.status === "won"
@@ -326,6 +329,7 @@ export default async function BetDetailPage({
         </div>
 
         {isOwner && <ShareBetButton betId={bet.id} />}
+        {(isOwner || canModerate) && <DeleteBetButton betId={bet.id} />}
       </div>
 
       {!session?.user && (

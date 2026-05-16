@@ -9,6 +9,7 @@ import { formatDate, formatOdds, timeUntil } from "@/lib/format";
 import { ResolveButtons } from "@/components/ResolveButtons";
 import { ReportButton } from "@/components/ReportButton";
 import { ShareBetButton } from "@/components/ShareBetButton";
+import { DeleteBetButton } from "@/components/DeleteBetButton";
 import { CategoryBadge } from "@/components/CategoryBadge";
 import { computeBetCategory } from "@/lib/betCategory";
 import { Avatar } from "@/components/Avatar";
@@ -174,6 +175,9 @@ export function BetCard({
       )}
 
       {!!currentUserId && <ShareBetButton betId={bet.id} />}
+      {!!currentUserId && (isOwner || canModerate) && (
+        <DeleteBetButton betId={bet.id} />
+      )}
     </div>
   );
 }
