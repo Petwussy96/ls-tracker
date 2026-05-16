@@ -32,10 +32,10 @@ export async function deleteBet(betId: string): Promise<DeleteBetResult> {
   });
   if (!bet) return { ok: false, error: "not_found" };
 
-  const isOwner = bet.userId === session.user.id;
-  const role = session.user.role;
-  const canModerate = role === "admin" || role === "moderator";
-  if (!isOwner && !canModerate) return { ok: false, error: "not_authorized" };
+  // Admin-only — full delete is destructive.
+  if (session.user.role !== "admin") {
+    return { ok: false, error: "not_authorized" };
+  }
 
   await prisma.bet.delete({ where: { id: betId } });
 

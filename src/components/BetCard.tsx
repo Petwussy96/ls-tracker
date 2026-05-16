@@ -175,8 +175,16 @@ export function BetCard({
       )}
 
       {!!currentUserId && <ShareBetButton betId={bet.id} />}
-      {!!currentUserId && (isOwner || canModerate) && (
-        <DeleteBetButton betId={bet.id} />
+      {currentUserRole === "admin" && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          <a
+            href={`/bet/${bet.id}/edit`}
+            className="inline-flex items-center gap-1 rounded-full bg-ink-50 px-3 py-1 text-xs font-semibold text-ink-600 hover:bg-ink-100 dark:bg-ink-800 dark:text-ink-300 dark:hover:bg-ink-700"
+          >
+            ✏️ Bewerk
+          </a>
+          <DeleteBetButton betId={bet.id} />
+        </div>
       )}
     </div>
   );
